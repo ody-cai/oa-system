@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 
-const supabase = getSupabaseClient();
-
 // 标记消息已读
 export async function POST(request: NextRequest) {
+  const supabase = getSupabaseClient();
   try {
     const body = await request.json();
     const { userId, otherUserId } = body;

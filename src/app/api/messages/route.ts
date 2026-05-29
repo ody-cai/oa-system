@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 
-const supabase = getSupabaseClient();
-
 // 获取会话列表或对话消息
 export async function GET(request: NextRequest) {
+  const supabase = getSupabaseClient();
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
@@ -123,6 +122,7 @@ export async function GET(request: NextRequest) {
 
 // 发送消息
 export async function POST(request: NextRequest) {
+  const supabase = getSupabaseClient();
   try {
     const body = await request.json();
     const { senderId, receiverId, content } = body;

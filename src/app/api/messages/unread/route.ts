@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 
-const supabase = getSupabaseClient();
-
 // 获取未读消息数量
 export async function GET(request: NextRequest) {
+  const supabase = getSupabaseClient();
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
