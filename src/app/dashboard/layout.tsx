@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   Home, 
   FileText, 
@@ -13,7 +14,8 @@ import {
   Menu,
   X,
   User,
-  Users
+  Users,
+  MessageCircle
 } from 'lucide-react';
 
 interface User {
@@ -32,6 +34,41 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  useEffect(() => {
+    const userData = localStorage.getItem('user');
+    if (!userData) {
+      router.push('/login');
+      return;
+    }
+    setUser(JSON.parse(userData));
+  }, [router]);
+
+  // 获取未读消息数
+  useEffect(() => {
+    if (user) {
+      fetchUnreadCount();
+      // 每30秒刷新一次未读消息数
+      const interval = setInterval(fetchUnreadCount, 30000);
+      return () => clearInterval(interval);
+    }
+  }, [user]);
+
+  const fetchUnreadCount = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch(`/api/messages/unread?userId=${user.id}`);
+      const data = await response.json();
+      
+      if (data.unreadCount !== undefined) {
+        setUnreadCount(data.unreadCount);
+      }
+    } catch (error) {
+      console.error('获取未读消息数失败:', error);
+    }
+  };
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -47,9 +84,18 @@ export default function DashboardLayout({
     router.push('/login');
   };
 
-  const menuItems = [
+  interface MenuItem {
+    href: string;
+    label: string;
+    icon: React.ElementType;
+    adminOnly: boolean;
+    badge?: number;
+  }
+
+  const menuItems: MenuItem[] = [
     { href: '/dashboard', label: '仪表盘', icon: Home, adminOnly: false },
     { href: '/dashboard/files', label: '文件管理', icon: FileText, adminOnly: false },
+    { href: '/dashboard/messages', label: '消息中心', icon: MessageCircle, adminOnly: false, badge: unreadCount },
     { href: '/dashboard/announcements', label: '公告中心', icon: MessageSquare, adminOnly: false },
     { href: '/dashboard/users', label: '用户管理', icon: Users, adminOnly: true },
     { href: '/dashboard/settings', label: '系统设置', icon: Settings, adminOnly: false },
@@ -120,14 +166,21 @@ export default function DashboardLayout({
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
                   className={`
-                    flex items-center space-x-3 px-4 py-3 rounded-lg transition-colors
+                    flex items-center justify-between px-4 py-3 rounded-lg transition-colors
                     ${isActive 
                       ? 'bg-[#ED8936] text-white' 
                       : 'text-gray-700 hover:bg-gray-100'}
                   `}
                 >
-                  <Icon className="h-5 w-5" />
-                  <span>{item.label}</span>
+                  <div className="flex items-center space-x-3">
+                    <Icon className="h-5 w-5" />
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && item.badge > 0 && (
+                    <Badge className="bg-red-500 text-white text-xs px-2 py-0.5">
+                      {item.badge > 99 ? '99+' : item.badge}
+                    </Badge>
+                  )}
                 </Link>
               );
             })}

@@ -66,3 +66,22 @@ export const announcements = pgTable(
 		index("announcements_created_at_idx").on(table.created_at),
 	]
 );
+
+// 消息表（站内即时通讯）
+export const messages = pgTable(
+	"messages",
+	{
+		id: varchar("id", { length: 36 }).primaryKey().default(sql`gen_random_uuid()`),
+		sender_id: varchar("sender_id", { length: 36 }).notNull().references(() => users.id),
+		receiver_id: varchar("receiver_id", { length: 36 }).notNull().references(() => users.id),
+		content: text("content").notNull(),
+		is_read: boolean("is_read").default(false).notNull(),
+		created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+	},
+	(table) => [
+		index("messages_sender_id_idx").on(table.sender_id),
+		index("messages_receiver_id_idx").on(table.receiver_id),
+		index("messages_is_read_idx").on(table.is_read),
+		index("messages_created_at_idx").on(table.created_at),
+	]
+);

@@ -73,8 +73,18 @@ pnpm start
 - 添加用户: `POST /api/users`
 - 更新状态: `PATCH /api/users/{id}`
 - 删除用户: `DELETE /api/users/{id}`
+- 调整配额: `PATCH /api/users/{id}` (storage_quota字段)
 
-### 5. 仪表盘
+### 5. 站内即时通讯
+- 发送消息: `POST /api/messages`
+- 获取会话列表: `GET /api/messages?userId={userId}`
+- 获取对话消息: `GET /api/messages?userId={userId}&otherUserId={otherUserId}`
+- 标记已读: `POST /api/messages/read`
+- 未读消息数: `GET /api/messages/unread?userId={userId}`
+- 支持用户间、用户与管理员间的即时通讯
+- 已读回执功能（双勾表示已读）
+
+### 6. 仪表盘
 - 文件统计展示
 - 最新公告展示
 - 快捷操作入口
@@ -111,6 +121,14 @@ pnpm start
 - content: 内容
 - author_id: 作者ID
 - is_pinned: 是否置顶
+
+### messages 表
+- id: UUID (主键)
+- sender_id: 发送者ID (外键 -> users.id)
+- receiver_id: 接收者ID (外键 -> users.id)
+- content: 消息内容
+- is_read: 是否已读
+- created_at: 创建时间
 
 ## 开发规范
 

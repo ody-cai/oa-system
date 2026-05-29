@@ -14,6 +14,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
+import { ContactAdminDialog } from '@/components/contact-admin-dialog';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -185,42 +186,11 @@ export default function LoginPage() {
         </DialogContent>
       </Dialog>
 
-      {/* 联系管理员弹窗 */}
-      <Dialog open={showContactAdmin} onOpenChange={setShowContactAdmin}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>联系管理员</DialogTitle>
-            <DialogDescription>
-              如需开通账户或遇到问题，请联系系统管理员。
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">管理员邮箱：</p>
-              <div className="flex items-center gap-2">
-                <code className="flex-1 px-3 py-2 bg-white rounded border text-[#2D3748]">admin@oa.com</code>
-                <Button
-                  onClick={copyEmail}
-                  variant="outline"
-                  size="sm"
-                  className="shrink-0"
-                >
-                  {copied ? '已复制' : '复制'}
-                </Button>
-              </div>
-              <p className="text-sm text-gray-500 mt-3">
-                请在邮件中说明您的姓名、部门及需要开通的权限。
-              </p>
-            </div>
-            <Button
-              onClick={() => setShowContactAdmin(false)}
-              className="w-full bg-[#ED8936] hover:bg-[#DD7730]"
-            >
-              我知道了
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      {/* 联系管理员弹窗（站内消息） */}
+      <ContactAdminDialog
+        open={showContactAdmin}
+        onOpenChange={setShowContactAdmin}
+      />
     </div>
   );
 }
