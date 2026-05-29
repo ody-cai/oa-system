@@ -17,6 +17,7 @@ export const users = pgTable(
 		password_hash: varchar("password_hash", { length: 255 }).notNull(),
 		role: varchar("role", { length: 20 }).notNull().default('employee'),
 		is_active: boolean("is_active").default(true).notNull(),
+		storage_quota: integer("storage_quota").default(10737418240).notNull(), // 默认10GB (10 * 1024 * 1024 * 1024)
 		created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 		updated_at: timestamp("updated_at", { withTimezone: true }),
 	},

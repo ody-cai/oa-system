@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import {
@@ -10,7 +10,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Select,
@@ -26,7 +26,8 @@ import {
   Search,
   UserCheck,
   UserX,
-  Trash2
+  Trash2,
+  HardDrive
 } from 'lucide-react';
 
 interface User {
@@ -35,7 +36,9 @@ interface User {
   name: string;
   role: string;
   is_active: boolean;
+  storage_quota: number;
   created_at: string;
+  used_space?: number;
 }
 
 interface CurrentUser {
@@ -58,6 +61,11 @@ export default function UsersPage() {
     password: '',
     role: 'employee',
   });
+  
+  // 配额管理
+  const [quotaDialogOpen, setQuotaDialogOpen] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<User | null>(null);
+  const [newQuota, setNewQuota] = useState(10); // GB
 
   useEffect(() => {
     // 获取当前用户信息
@@ -79,10 +87,25 @@ export default function UsersPage() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/users');
-      if (response.ok) {
-        const data = await response.json();
-        setUsers(data.users || []);
+      
+      // 获取用户列表
+      const usersResponse = await fetch('/api/users');
+      if (usersResponse.ok) {
+        const usersData = await usersResponse.json();
+        
+        // 获取每个用户的已使用空间
+        const usersWithUsage = await Promise.all(
+          (usersData.users || []).map(async (user: User) => {
+            const filesResponse = await fetch(`/api/files/stats?userId=${user.id}`);
+            if (filesResponse.ok) {
+              const filesData = await filesResponse.json();
+              return { ...user, used_space: filesData.total_size || 0 };
+            }
+            return { ...user, used_space: 0 };
+          })
+        );
+        
+        setUsers(usersWithUsage);
       }
     } catch (error) {
       console.error('获取用户列表失败:', error);
@@ -155,10 +178,55 @@ export default function UsersPage() {
     }
   };
 
+  const handleUpdateQuota = async () => {
+    if (!selectedUser) return;
+    
+    // 转换为字节
+    const quotaBytes = newQuota === -1 ? -1 : newQuota * 1024 * 1024 * 1024;
+
+    try {
+      const response = await fetch(`/api/users/${selectedUser.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storage_quota: quotaBytes }),
+      });
+
+      if (!response.ok) throw new Error('更新配额失败');
+      
+      await fetchUsers();
+      setQuotaDialogOpen(false);
+      setSelectedUser(null);
+    } catch (error) {
+      alert('更新配额失败，请重试');
+    }
+  };
+
+  const openQuotaDialog = (user: User) => {
+    setSelectedUser(user);
+    // 转换为GB，-1表示无限制
+    setNewQuota(user.storage_quota === -1 ? -1 : Math.round(user.storage_quota / (1024 * 1024 * 1024)));
+    setQuotaDialogOpen(true);
+  };
+
   const filteredUsers = users.filter((user) =>
     user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
     user.email.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 B';
+    const k = 1024;
+    const sizes = ['B', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return Math.round((bytes / Math.pow(k, i)) * 100) / 100 + ' ' + sizes[i];
+  };
+
+  const formatQuota = (quota: number, usedSpace: number) => {
+    if (quota === -1) {
+      return `${formatFileSize(usedSpace)} / 无限制`;
+    }
+    return `${formatFileSize(usedSpace)} / ${formatFileSize(quota)}`;
+  };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('zh-CN', {
@@ -183,17 +251,18 @@ export default function UsersPage() {
         <div>
           <h1 className="text-2xl font-semibold text-[#2D3748]">用户管理</h1>
           <p className="text-sm text-gray-600 mt-1">
-            管理系统用户账户和权限
+            管理系统用户账户、权限和存储配额
           </p>
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-[#ED8936] hover:bg-[#DD7730]">
-              <Plus className="h-4 w-4 mr-2" />
-              添加用户
-            </Button>
-          </DialogTrigger>
+          <button
+            onClick={() => setDialogOpen(true)}
+            className="bg-[#ED8936] hover:bg-[#DD7730] text-white px-4 py-2 rounded-lg flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            添加用户
+          </button>
           <DialogContent className="sm:max-w-md">
             <DialogHeader>
               <DialogTitle>添加新用户</DialogTitle>
@@ -314,7 +383,7 @@ export default function UsersPage() {
                         {user.name.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <div>
+                    <div className="flex-1">
                       <div className="flex items-center gap-2">
                         <h3 className="font-medium text-[#2D3748]">{user.name}</h3>
                         <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
@@ -331,33 +400,49 @@ export default function UsersPage() {
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleToggleStatus(user.id, user.is_active)}
-                      className={user.is_active ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50'}
+                  <div className="flex items-center gap-4">
+                    {/* 存储配额信息 */}
+                    <button
+                      onClick={() => openQuotaDialog(user)}
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-50 hover:bg-gray-100 transition-colors"
                     >
-                      {user.is_active ? (
-                        <>
-                          <UserX className="h-4 w-4 mr-1" />
-                          禁用
-                        </>
-                      ) : (
-                        <>
-                          <UserCheck className="h-4 w-4 mr-1" />
-                          启用
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleDeleteUser(user.id, user.name)}
-                      className="border-gray-200 text-gray-600 hover:bg-gray-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
+                      <HardDrive className="h-4 w-4 text-gray-500" />
+                      <div className="text-left">
+                        <p className="text-xs text-gray-500">存储空间</p>
+                        <p className="text-sm font-medium text-[#2D3748]">
+                          {formatQuota(user.storage_quota, user.used_space || 0)}
+                        </p>
+                      </div>
+                    </button>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleToggleStatus(user.id, user.is_active)}
+                        className={user.is_active ? 'border-red-200 text-red-600 hover:bg-red-50' : 'border-green-200 text-green-600 hover:bg-green-50'}
+                      >
+                        {user.is_active ? (
+                          <>
+                            <UserX className="h-4 w-4 mr-1" />
+                            禁用
+                          </>
+                        ) : (
+                          <>
+                            <UserCheck className="h-4 w-4 mr-1" />
+                            启用
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => handleDeleteUser(user.id, user.name)}
+                        className="border-gray-200 text-gray-600 hover:bg-gray-50"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
                 </div>
               </CardContent>
@@ -365,6 +450,63 @@ export default function UsersPage() {
           ))}
         </div>
       )}
+
+      {/* 配额管理弹窗 */}
+      <Dialog open={quotaDialogOpen} onOpenChange={setQuotaDialogOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>调整存储配额</DialogTitle>
+            <DialogDescription>
+              为用户 {selectedUser?.name} 设置存储空间上限
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label>存储配额</Label>
+              <Select
+                value={newQuota.toString()}
+                onValueChange={(value) => setNewQuota(parseInt(value))}
+              >
+                <SelectTrigger className="mt-1">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="5">5 GB</SelectItem>
+                  <SelectItem value="10">10 GB</SelectItem>
+                  <SelectItem value="20">20 GB</SelectItem>
+                  <SelectItem value="50">50 GB</SelectItem>
+                  <SelectItem value="100">100 GB</SelectItem>
+                  <SelectItem value="-1">无限制（管理员专用）</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {selectedUser && (
+              <div className="p-3 bg-gray-50 rounded-lg">
+                <p className="text-sm text-gray-600">
+                  当前已使用：{formatFileSize(selectedUser.used_space || 0)}
+                </p>
+              </div>
+            )}
+            
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setQuotaDialogOpen(false)}
+              >
+                取消
+              </Button>
+              <Button
+                onClick={handleUpdateQuota}
+                className="bg-[#ED8936] hover:bg-[#DD7730]"
+              >
+                保存
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

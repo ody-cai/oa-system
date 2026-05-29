@@ -1,14 +1,24 @@
-import { NextResponse } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
+    const { searchParams } = new URL(request.url);
+    const userId = searchParams.get('userId');
+    
     const client = getSupabaseClient();
     
-    // 查询文件总数和总大小
-    const { data: files, error } = await client
+    // 构建查询
+    let query = client
       .from('files')
       .select('file_size');
+    
+    // 如果指定了用户ID，只查询该用户的文件
+    if (userId) {
+      query = query.eq('uploader_id', userId);
+    }
+
+    const { data: files, error } = await query;
 
     if (error) {
       throw new Error(`查询文件统计失败: ${error.message}`);

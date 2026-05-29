@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     // 查询所有用户
     const { data: users, error } = await client
       .from('users')
-      .select('id, email, name, role, is_active, created_at')
+      .select('id, email, name, role, is_active, storage_quota, created_at')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -54,6 +54,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 管理员无上限配额（-1表示无限制），普通员工默认10GB
+    const storageQuota = role === 'admin' ? -1 : 10737418240;
+
     // 创建新用户
     const { data: user, error } = await client
       .from('users')
@@ -63,8 +66,9 @@ export async function POST(request: NextRequest) {
         password_hash: password, // 生产环境应该加密
         role,
         is_active: true,
+        storage_quota: storageQuota,
       })
-      .select('id, email, name, role, is_active, created_at')
+      .select('id, email, name, role, is_active, storage_quota, created_at')
       .single();
 
     if (error) {

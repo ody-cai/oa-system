@@ -8,36 +8,45 @@ export async function PATCH(
   try {
     const { id: userId } = await params;
     const body = await request.json();
-    const { is_active } = body;
+    const { is_active, storage_quota } = body;
 
-    if (typeof is_active !== 'boolean') {
+    const client = getSupabaseClient();
+    
+    // 构建更新对象
+    const updateData: Record<string, unknown> = {};
+    if (typeof is_active === 'boolean') {
+      updateData.is_active = is_active;
+    }
+    if (typeof storage_quota === 'number') {
+      updateData.storage_quota = storage_quota;
+    }
+
+    if (Object.keys(updateData).length === 0) {
       return NextResponse.json(
-        { error: '无效的状态值' },
+        { error: '没有要更新的内容' },
         { status: 400 }
       );
     }
 
-    const client = getSupabaseClient();
-    
     const { data: user, error } = await client
       .from('users')
-      .update({ is_active })
+      .update(updateData)
       .eq('id', userId)
-      .select('id, email, name, role, is_active')
+      .select('id, email, name, role, is_active, storage_quota')
       .single();
 
     if (error) {
-      throw new Error(`更新用户状态失败: ${error.message}`);
+      throw new Error(`更新用户失败: ${error.message}`);
     }
 
     return NextResponse.json({
       user,
-      message: '用户状态已更新',
+      message: '用户信息已更新',
     });
   } catch (error) {
-    console.error('更新用户状态失败:', error);
+    console.error('更新用户失败:', error);
     return NextResponse.json(
-      { error: '更新用户状态失败' },
+      { error: '更新用户失败' },
       { status: 500 }
     );
   }

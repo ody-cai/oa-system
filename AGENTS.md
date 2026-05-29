@@ -88,6 +88,13 @@ pnpm start
 - password_hash: 密码哈希
 - role: 角色 (admin/employee)
 - is_active: 是否激活
+- storage_quota: 存储配额（字节，-1表示无限制，默认10GB）
+
+### 存储配额说明
+- 普通员工：默认10GB存储空间
+- 管理员：无限制存储空间
+- 管理员可在用户管理页面调整任何用户的配额
+- 文件上传时会自动检查配额，超出则拒绝上传
 
 ### files 表
 - id: UUID (主键)
