@@ -70,6 +70,13 @@ export default function UsersPage() {
   
   // 邮件相关
   const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [emailUser, setEmailUser] = useState<User | null>(null);
+  const [emailForm, setEmailForm] = useState({
+    subject: '',
+    content: '',
+  });
+  const [sendingEmail, setSendingEmail] = useState(false);
   
   // 复制邮箱
   const copyEmail = async (email: string) => {
@@ -79,6 +86,54 @@ export default function UsersPage() {
       setTimeout(() => setCopiedEmail(null), 2000);
     } catch (err) {
       alert('复制失败，请手动复制');
+    }
+  };
+
+  // 打开发送邮件对话框
+  const openEmailDialog = (user: User) => {
+    setEmailUser(user);
+    setEmailForm({ subject: '', content: '' });
+    setEmailDialogOpen(true);
+  };
+
+  // 发送邮件
+  const handleSendEmail = async () => {
+    if (!emailUser || !emailForm.subject || !emailForm.content) {
+      alert('请填写邮件主题和内容');
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const response = await fetch('/api/email/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          to: emailUser.email,
+          subject: emailForm.subject,
+          content: emailForm.content,
+          html: `<div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+            <h2 style="color: #2D3748;">${emailForm.subject}</h2>
+            <p style="color: #4A5568; line-height: 1.6;">${emailForm.content.replace(/\n/g, '<br>')}</p>
+            <hr style="border: none; border-top: 1px solid #E2E8F0; margin: 24px 0;">
+            <p style="color: #718096; font-size: 12px;">此邮件由OA办公系统发送</p>
+          </div>`
+        }),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || '发送失败');
+      }
+
+      alert('邮件发送成功！');
+      setEmailDialogOpen(false);
+      setEmailUser(null);
+    } catch (error) {
+      alert(error instanceof Error ? error.message : '邮件发送失败，请检查是否配置了邮件服务');
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -435,11 +490,11 @@ export default function UsersPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => copyEmail(user.email)}
+                        onClick={() => openEmailDialog(user)}
                         className="border-blue-200 text-blue-600 hover:bg-blue-50"
                       >
                         <Mail className="h-4 w-4 mr-1" />
-                        {copiedEmail === user.email ? '已复制' : '邮件'}
+                        发邮件
                       </Button>
                       <Button
                         variant="outline"
@@ -527,6 +582,62 @@ export default function UsersPage() {
                 className="bg-[#ED8936] hover:bg-[#DD7730]"
               >
                 保存
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* 发送邮件弹窗 */}
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>发送邮件</DialogTitle>
+            <DialogDescription>
+              发送邮件给 {emailUser?.name} ({emailUser?.email})
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <Label htmlFor="email-subject">邮件主题</Label>
+              <Input
+                id="email-subject"
+                value={emailForm.subject}
+                onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
+                placeholder="请输入邮件主题"
+                className="mt-1"
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="email-content">邮件内容</Label>
+              <textarea
+                id="email-content"
+                value={emailForm.content}
+                onChange={(e) => setEmailForm({ ...emailForm, content: e.target.value })}
+                placeholder="请输入邮件内容..."
+                className="mt-1 w-full min-h-[200px] p-3 border rounded-lg resize-none focus:outline-none focus:ring-2 focus:ring-[#ED8936] focus:border-transparent"
+              />
+            </div>
+            
+            <div className="p-3 bg-blue-50 rounded-lg text-sm text-blue-600">
+              <p>💡 提示：邮件将通过OA系统发送，发件人地址为 onboarding@resend.dev</p>
+            </div>
+            
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setEmailDialogOpen(false)}
+              >
+                取消
+              </Button>
+              <Button
+                onClick={handleSendEmail}
+                disabled={sendingEmail}
+                className="bg-[#ED8936] hover:bg-[#DD7730]"
+              >
+                {sendingEmail ? '发送中...' : '发送邮件'}
               </Button>
             </div>
           </div>
