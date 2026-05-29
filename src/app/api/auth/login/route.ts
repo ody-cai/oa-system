@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { verifyPassword } from '@/lib/password';
 
 export async function POST(request: NextRequest) {
   try {
@@ -34,9 +35,10 @@ export async function POST(request: NextRequest) {
 
     const user = users[0];
 
-    // 简单的密码验证（生产环境应该使用bcrypt等加密库）
-    // 这里仅作为演示，实际应该使用加密的密码验证
-    if (user.password_hash !== password) {
+    // 使用 bcrypt 验证密码
+    const isValidPassword = await verifyPassword(password, user.password_hash);
+    
+    if (!isValidPassword) {
       return NextResponse.json(
         { error: '密码错误' },
         { status: 401 }

@@ -157,7 +157,7 @@ pnpm start
 
 1. 文件上传功能已集成云存储，使用 S3Storage SDK
 2. 所有文件下载使用预签名 URL，支持跨域
-3. 用户密码当前为明文存储，生产环境需改用 bcrypt
+3. 用户密码已使用 bcrypt 加密存储，salt rounds = 10
 4. RLS 策略暂未配置，后续实现登录功能时需补充
 
 ## GitHub 同步规范 [重要]

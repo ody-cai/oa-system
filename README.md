@@ -152,11 +152,11 @@ CREATE INDEX messages_receiver_id_idx ON messages(receiver_id);
 5. **创建初始管理员账号**
 
 ```sql
+-- 注意：以下密码哈希对应明文密码 'admin123'
+-- 建议在生产环境生成新的加密密码
 INSERT INTO users (email, name, password_hash, role)
-VALUES ('admin@example.com', '管理员', 'your-password', 'admin');
+VALUES ('admin@example.com', '管理员', '$2b$10$/QDjvCkJycI1lLdPgctrSuQSuPR0PCucSFyZkOsYsaBkmcmkRlrUW', 'admin');
 ```
-
-> 注意：生产环境请使用 bcrypt 加密密码
 
 6. **启动开发服务器**
 
@@ -245,7 +245,7 @@ CMD ["pnpm", "start"]
 
 ### 安全注意事项
 
-1. **密码存储**：当前为明文存储，生产环境请使用 bcrypt
+1. **密码存储**：已使用 bcrypt 加密存储（salt rounds = 10）
 2. **环境变量**：请勿将 `.env` 文件提交到版本控制
 3. **HTTPS**：生产环境强制使用 HTTPS
 4. **RLS 策略**：建议配置 Supabase RLS 策略增强数据安全
@@ -400,11 +400,11 @@ CREATE INDEX messages_receiver_id_idx ON messages(receiver_id);
 5. **Create initial admin account**
 
 ```sql
+-- Note: The password hash below corresponds to plain text 'admin123'
+-- Generate a new hashed password for production
 INSERT INTO users (email, name, password_hash, role)
-VALUES ('admin@example.com', 'Admin', 'your-password', 'admin');
+VALUES ('admin@example.com', 'Admin', '$2b$10$/QDjvCkJycI1lLdPgctrSuQSuPR0PCucSFyZkOsYsaBkmcmkRlrUW', 'admin');
 ```
-
-> Note: Use bcrypt for password hashing in production
 
 6. **Start development server**
 
@@ -493,7 +493,7 @@ CMD ["pnpm", "start"]
 
 ### Security Notes
 
-1. **Password Storage**: Currently plain text, use bcrypt in production
+1. **Password Storage**: Encrypted with bcrypt (salt rounds = 10)
 2. **Environment Variables**: Never commit `.env` files to version control
 3. **HTTPS**: Enforce HTTPS in production
 4. **RLS Policies**: Configure Supabase RLS policies for enhanced data security

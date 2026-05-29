@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { hashPassword } from '@/lib/password';
 
 export async function GET(request: NextRequest) {
   try {
@@ -57,13 +58,16 @@ export async function POST(request: NextRequest) {
     // 管理员无上限配额（-1表示无限制），普通员工默认10GB
     const storageQuota = role === 'admin' ? -1 : 10737418240;
 
+    // 加密密码
+    const hashedPassword = await hashPassword(password);
+
     // 创建新用户
     const { data: user, error } = await client
       .from('users')
       .insert({
         email,
         name,
-        password_hash: password, // 生产环境应该加密
+        password_hash: hashedPassword,
         role,
         is_active: true,
         storage_quota: storageQuota,
