@@ -18,6 +18,7 @@ export const users = pgTable(
 		role: varchar("role", { length: 20 }).notNull().default('employee'),
 		is_active: boolean("is_active").default(true).notNull(),
 		storage_quota: integer("storage_quota").default(10737418240).notNull(), // 默认10GB (10 * 1024 * 1024 * 1024)
+		last_active_at: timestamp("last_active_at", { withTimezone: true }), // 最后活跃时间，用于判断在线状态
 		created_at: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
 		updated_at: timestamp("updated_at", { withTimezone: true }),
 	},

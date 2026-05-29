@@ -17,7 +17,9 @@ import {
   Users,
   MessageCircle,
   ChevronLeft,
-  ChevronRight
+  ChevronRight,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 interface User {
@@ -39,6 +41,7 @@ export default function DashboardLayout({
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [isLandscape, setIsLandscape] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [isDarkMode, setIsDarkMode] = useState(false);
 
   // 检测屏幕方向和大小
   useEffect(() => {
@@ -70,7 +73,46 @@ export default function DashboardLayout({
       return;
     }
     setUser(JSON.parse(userData));
+    
+    // 初始化深色模式
+    const savedTheme = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
+    setIsDarkMode(shouldBeDark);
+    document.documentElement.classList.toggle('dark', shouldBeDark);
   }, [router]);
+
+  // 深色模式切换
+  const toggleDarkMode = () => {
+    const newMode = !isDarkMode;
+    setIsDarkMode(newMode);
+    document.documentElement.classList.toggle('dark', newMode);
+    localStorage.setItem('theme', newMode ? 'dark' : 'light');
+  };
+
+  // 发送在线心跳
+  useEffect(() => {
+    if (user) {
+      const sendHeartbeat = async () => {
+        try {
+          await fetch('/api/users/heartbeat', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ userId: user.id }),
+          });
+        } catch (error) {
+          console.error('Heartbeat failed:', error);
+        }
+      };
+      
+      // 立即发送一次
+      sendHeartbeat();
+      // 每30秒发送心跳
+      const interval = setInterval(sendHeartbeat, 30000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [user]);
 
   // 获取未读消息数
   useEffect(() => {
@@ -134,47 +176,47 @@ export default function DashboardLayout({
 
   if (!user) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#F7FAFC]">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#ED8936]"></div>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#F7FAFC]">
+    <div className="min-h-screen bg-background">
       {/* 移动端菜单按钮 */}
-      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3 shadow-sm">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-card border-b border-border px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+            className="p-2 rounded-lg hover:bg-muted transition-colors"
           >
-            {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+            {sidebarOpen ? <X className="h-6 w-6 text-foreground" /> : <Menu className="h-6 w-6 text-foreground" />}
           </button>
-          <h1 className="text-lg font-semibold text-[#2D3748]">OA办公系统</h1>
+          <h1 className="text-lg font-semibold text-foreground">OA办公系统</h1>
           <div className="w-10"></div>
         </div>
       </div>
 
       {/* 侧边栏 - 平板和桌面 */}
       <aside className={`
-        fixed top-0 left-0 z-40 h-full bg-white border-r border-gray-200 transform transition-all duration-300 ease-in-out shadow-sm
+        fixed top-0 left-0 z-40 h-full bg-card border-r border-border transform transition-all duration-300 ease-in-out shadow-sm
         ${sidebarCollapsed ? 'w-20' : 'w-64'}
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
         md:translate-x-0
       `}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className={`p-4 border-b border-gray-200 ${sidebarCollapsed ? 'px-2' : ''}`}>
+          <div className={`p-4 border-b border-border ${sidebarCollapsed ? 'px-2' : ''}`}>
             <div className="flex items-center justify-between">
               <div className={`flex items-center ${sidebarCollapsed ? 'justify-center w-full' : ''}`}>
-                <div className="w-10 h-10 rounded-lg bg-[#ED8936] flex items-center justify-center flex-shrink-0">
-                  <span className="text-white font-bold text-lg">OA</span>
+                <div className="w-10 h-10 rounded-lg bg-primary flex items-center justify-center flex-shrink-0">
+                  <span className="text-primary-foreground font-bold text-lg">OA</span>
                 </div>
                 {!sidebarCollapsed && (
                   <div className="ml-3">
-                    <h1 className="text-lg font-semibold text-[#2D3748]">OA办公系统</h1>
-                    <p className="text-xs text-gray-500">高效协作，智能办公</p>
+                    <h1 className="text-lg font-semibold text-foreground">OA办公系统</h1>
+                    <p className="text-xs text-muted-foreground">高效协作，智能办公</p>
                   </div>
                 )}
               </div>
@@ -182,15 +224,19 @@ export default function DashboardLayout({
           </div>
 
           {/* 用户信息 */}
-          <div className={`p-4 border-b border-gray-200 ${sidebarCollapsed ? 'px-2' : ''}`}>
+          <div className={`p-4 border-b border-border ${sidebarCollapsed ? 'px-2' : ''}`}>
             <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}`}>
-              <div className="w-10 h-10 rounded-full bg-[#ED8936] flex items-center justify-center flex-shrink-0">
-                <User className="h-5 w-5 text-white" />
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center flex-shrink-0">
+                  <User className="h-5 w-5 text-primary-foreground" />
+                </div>
+                {/* 在线状态指示器 */}
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 border-2 border-card rounded-full"></div>
               </div>
               {!sidebarCollapsed && (
-                <div className="overflow-hidden">
-                  <p className="text-sm font-medium text-[#2D3748] truncate">{user.name}</p>
-                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                <div className="overflow-hidden flex-1">
+                  <p className="text-sm font-medium text-foreground truncate">{user.name}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                 </div>
               )}
             </div>
@@ -210,8 +256,8 @@ export default function DashboardLayout({
                   className={`
                     flex items-center ${sidebarCollapsed ? 'justify-center px-3' : 'justify-between px-4'} py-3 rounded-lg transition-colors group
                     ${isActive 
-                      ? 'bg-[#ED8936] text-white' 
-                      : 'text-gray-700 hover:bg-gray-100'}
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'text-foreground hover:bg-muted'}
                   `}
                 >
                   <div className={`flex items-center ${sidebarCollapsed ? '' : 'space-x-3'}`}>
@@ -219,12 +265,12 @@ export default function DashboardLayout({
                     {!sidebarCollapsed && <span>{item.label}</span>}
                   </div>
                   {!sidebarCollapsed && item.badge && item.badge > 0 && (
-                    <Badge className="bg-red-500 text-white text-xs px-2 py-0.5">
+                    <Badge className="bg-destructive text-destructive-foreground text-xs px-2 py-0.5">
                       {item.badge > 99 ? '99+' : item.badge}
                     </Badge>
                   )}
                   {sidebarCollapsed && item.badge && item.badge > 0 && (
-                    <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></div>
+                    <div className="absolute top-1 right-1 w-2 h-2 bg-destructive rounded-full"></div>
                   )}
                 </Link>
               );
@@ -232,22 +278,34 @@ export default function DashboardLayout({
           </nav>
 
           {/* 折叠按钮 - 平板和桌面 */}
-          <div className="hidden md:flex p-2 border-t border-gray-200 justify-center">
+          <div className="hidden md:flex p-2 border-t border-border justify-center">
             <button
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+              className="p-2 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors"
               title={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
             >
               {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
             </button>
           </div>
 
+          {/* 深色模式切换 */}
+          <div className={`p-2 border-t border-border ${sidebarCollapsed ? 'px-2' : ''}`}>
+            <button
+              onClick={toggleDarkMode}
+              className={`w-full flex items-center ${sidebarCollapsed ? 'justify-center px-3' : 'justify-start px-4'} py-2.5 rounded-lg text-foreground hover:bg-muted transition-colors`}
+              title={sidebarCollapsed ? (isDarkMode ? '切换亮色模式' : '切换深色模式') : undefined}
+            >
+              {isDarkMode ? <Sun className="h-5 w-5 flex-shrink-0" /> : <Moon className="h-5 w-5 flex-shrink-0" />}
+              {!sidebarCollapsed && <span className="ml-3">{isDarkMode ? '浅色模式' : '深色模式'}</span>}
+            </button>
+          </div>
+
           {/* 退出登录 */}
-          <div className={`p-2 border-t border-gray-200 ${sidebarCollapsed ? 'px-2' : ''}`}>
+          <div className={`p-2 border-t border-border ${sidebarCollapsed ? 'px-2' : ''}`}>
             <Button
               onClick={handleLogout}
               variant="ghost"
-              className={`w-full ${sidebarCollapsed ? 'justify-center px-3' : 'justify-start'} text-gray-700 hover:bg-gray-100`}
+              className={`w-full ${sidebarCollapsed ? 'justify-center px-3' : 'justify-start'} text-foreground hover:bg-muted`}
               title={sidebarCollapsed ? '退出登录' : undefined}
             >
               <LogOut className="h-5 w-5 flex-shrink-0" />
@@ -259,7 +317,7 @@ export default function DashboardLayout({
 
       {/* 主内容区域 */}
       <main className={`
-        min-h-screen transition-all duration-300
+        min-h-screen transition-all duration-300 bg-background
         md:pt-0 pt-16
         ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}
       `}>

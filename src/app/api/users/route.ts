@@ -8,7 +8,7 @@ export async function GET(request: NextRequest) {
     // 查询所有用户
     const { data: users, error } = await client
       .from('users')
-      .select('id, email, name, role, is_active, storage_quota, created_at')
+      .select('id, email, name, role, is_active, storage_quota, created_at, last_online_at')
       .order('created_at', { ascending: false });
 
     if (error) {
@@ -68,7 +68,7 @@ export async function POST(request: NextRequest) {
         is_active: true,
         storage_quota: storageQuota,
       })
-      .select('id, email, name, role, is_active, storage_quota, created_at')
+      .select('id, email, name, role, is_active, storage_quota, created_at, last_online_at')
       .single();
 
     if (error) {
