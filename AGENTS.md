@@ -1,65 +1,130 @@
-# 项目上下文
+# AGENTS.md
 
-### 版本技术栈
+## 项目概览
+
+OA办公自动化系统，集成云存储功能，支持文件管理、公告发布等核心办公功能。
+
+### 技术栈
 
 - **Framework**: Next.js 16 (App Router)
 - **Core**: React 19
 - **Language**: TypeScript 5
-- **UI 组件**: shadcn/ui (基于 Radix UI)
+- **UI Components**: shadcn/ui (基于 Radix UI)
 - **Styling**: Tailwind CSS 4
+- **Database**: Supabase (PostgreSQL)
+- **Storage**: S3 兼容对象存储
 
 ## 目录结构
 
 ```
 ├── public/                 # 静态资源
 ├── scripts/                # 构建与启动脚本
-│   ├── build.sh            # 构建脚本
-│   ├── dev.sh              # 开发环境启动脚本
-│   ├── prepare.sh          # 预处理脚本
-│   └── start.sh            # 生产环境启动脚本
 ├── src/
 │   ├── app/                # 页面路由与布局
+│   │   ├── api/            # 后端API路由
+│   │   ├── login/          # 登录页面
+│   │   └── dashboard/      # 仪表盘及子页面
 │   ├── components/ui/      # Shadcn UI 组件库
 │   ├── hooks/              # 自定义 Hooks
 │   ├── lib/                # 工具库
 │   │   └── utils.ts        # 通用工具函数 (cn)
-│   └── server.ts           # 自定义服务端入口
-├── next.config.ts          # Next.js 配置
-├── package.json            # 项目依赖管理
-└── tsconfig.json           # TypeScript 配置
+│   └── storage/            # 数据存储
+│       └── database/       # 数据库客户端
+└── next.config.ts          # Next.js 配置
 ```
 
-- 项目文件（如 app 目录、pages 目录、components 等）默认初始化到 `src/` 目录下。
+## 构建和测试命令
 
-## 包管理规范
+```bash
+# 开发环境
+pnpm dev
 
-**仅允许使用 pnpm** 作为包管理器，**严禁使用 npm 或 yarn**。
-**常用命令**：
-- 安装依赖：`pnpm add <package>`
-- 安装开发依赖：`pnpm add -D <package>`
-- 安装所有依赖：`pnpm install`
-- 移除依赖：`pnpm remove <package>`
+# 代码检查
+pnpm lint
+pnpm ts-check
+
+# 构建
+pnpm build
+
+# 生产环境
+pnpm start
+```
+
+## 核心功能模块
+
+### 1. 用户认证
+- 登录接口: `POST /api/auth/login`
+- 用户信息存储在 localStorage
+- 路由保护：dashboard 页面需要登录
+
+### 2. 文件管理
+- 文件上传: `POST /api/files/upload` (集成云存储)
+- 文件下载: `GET /api/files/download?key={fileKey}`
+- 文件删除: `DELETE /api/files/{id}`
+- 文件列表: `GET /api/files?path={path}`
+- 文件统计: `GET /api/files/stats`
+
+### 3. 公告管理
+- 公告列表: `GET /api/announcements?limit={limit}`
+- 发布公告: `POST /api/announcements`
+
+### 4. 仪表盘
+- 文件统计展示
+- 最新公告展示
+- 快捷操作入口
+
+## 数据库设计
+
+### users 表
+- id: UUID (主键)
+- email: 邮箱 (唯一)
+- name: 姓名
+- password_hash: 密码哈希
+- role: 角色 (admin/employee)
+- is_active: 是否激活
+
+### files 表
+- id: UUID (主键)
+- file_key: 对象存储key
+- file_name: 文件名
+- file_size: 文件大小
+- file_type: 文件类型
+- uploader_id: 上传者ID
+- folder_path: 文件夹路径
+
+### announcements 表
+- id: UUID (主键)
+- title: 标题
+- content: 内容
+- author_id: 作者ID
+- is_pinned: 是否置顶
 
 ## 开发规范
 
-### 编码规范
+### 代码风格
+- 使用 TypeScript strict 模式
+- 字段命名使用 snake_case
+- 所有 API 错误必须检查并处理
 
-- 默认按 TypeScript `strict` 心智写代码；优先复用当前作用域已声明的变量、函数、类型和导入，禁止引用未声明标识符或拼错变量名。
-- 禁止隐式 `any` 和 `as any`；函数参数、返回值、解构项、事件对象、`catch` 错误在使用前应有明确类型或先完成类型收窄，并清理未使用的变量和导入。
+### 组件规范
+- 使用 shadcn/ui 组件库
+- 遵循设计规范（见 DESIGN.md）
+- 禁止在 JSX 中直接使用动态数据
 
-### next.config 配置规范
+### 数据库操作
+- 使用 Supabase SDK 进行 CRUD
+- 禁止使用 Drizzle ORM 查询语法
+- 所有操作必须检查 error 并 throw
 
-- 配置的路径不要写死绝对路径，必须使用 path.resolve(__dirname, ...)、import.meta.dirname 或 process.cwd() 动态拼接。
+## 测试账号
 
-### Hydration 问题防范
+- 邮箱: admin@oa.com
+- 密码: admin123
+- 角色: admin
 
-1. 严禁在 JSX 渲染逻辑中直接使用 typeof window、Date.now()、Math.random() 等动态数据。**必须使用 'use client' 并配合 useEffect + useState 确保动态内容仅在客户端挂载后渲染**；同时严禁非法 HTML 嵌套（如 <p> 嵌套 <div>）。
-2. **禁止使用 head 标签**，优先使用 metadata，详见文档：https://nextjs.org/docs/app/api-reference/functions/generate-metadata
-   1. 三方 CSS、字体等资源可在 `globals.css` 中顶部通过 `@import` 引入或使用 next/font
-   2. preload, preconnect, dns-prefetch 通过 ReactDOM 的 preload、preconnect、dns-prefetch 方法引入
-   3. json-ld 可阅读 https://nextjs.org/docs/app/guides/json-ld
+## 注意事项
 
-## UI 设计与组件规范 (UI & Styling Standards)
-
-- 模板默认预装核心组件库 `shadcn/ui`，位于`src/components/ui/`目录下
-- Next.js 项目**必须默认**采用 shadcn/ui 组件、风格和规范，**除非用户指定用其他的组件和规范。**
+1. 文件上传功能已集成云存储，使用 S3Storage SDK
+2. 所有文件下载使用预签名 URL，支持跨域
+3. 用户密码当前为明文存储，生产环境需改用 bcrypt
+4. RLS 策略暂未配置，后续实现登录功能时需补充
