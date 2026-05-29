@@ -15,7 +15,9 @@ import {
   X,
   User,
   Users,
-  MessageCircle
+  MessageCircle,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 
 interface User {
@@ -34,7 +36,32 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isLandscape, setIsLandscape] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // 检测屏幕方向和大小
+  useEffect(() => {
+    const checkOrientation = () => {
+      const width = window.innerWidth;
+      const height = window.innerHeight;
+      setIsLandscape(width > height);
+      
+      // 平板横屏时默认展开侧边栏，竖屏时默认折叠
+      if (width >= 768 && width < 1024) {
+        setSidebarCollapsed(width < height);
+      }
+    };
+    
+    checkOrientation();
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+    
+    return () => {
+      window.removeEventListener('resize', checkOrientation);
+      window.removeEventListener('orientationchange', checkOrientation);
+    };
+  }, []);
 
   useEffect(() => {
     const userData = localStorage.getItem('user');
@@ -116,11 +143,11 @@ export default function DashboardLayout({
   return (
     <div className="min-h-screen bg-[#F7FAFC]">
       {/* 移动端菜单按钮 */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3">
+      <div className="md:hidden fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 px-4 py-3 shadow-sm">
         <div className="flex items-center justify-between">
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
-            className="p-2 rounded-lg hover:bg-gray-100"
+            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
           >
             {sidebarOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
           </button>
@@ -129,34 +156,48 @@ export default function DashboardLayout({
         </div>
       </div>
 
-      {/* 侧边栏 */}
+      {/* 侧边栏 - 平板和桌面 */}
       <aside className={`
-        fixed top-0 left-0 z-40 h-full w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out
-        lg:translate-x-0
+        fixed top-0 left-0 z-40 h-full bg-white border-r border-gray-200 transform transition-all duration-300 ease-in-out shadow-sm
+        ${sidebarCollapsed ? 'w-20' : 'w-64'}
         ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
+        md:translate-x-0
       `}>
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-gray-200">
-            <h1 className="text-2xl font-semibold text-[#2D3748]">OA办公系统</h1>
-            <p className="text-sm text-gray-500 mt-1">高效协作，智能办公</p>
-          </div>
-
-          {/* 用户信息 */}
-          <div className="p-4 border-b border-gray-200">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 rounded-full bg-[#ED8936] flex items-center justify-center">
-                <User className="h-5 w-5 text-white" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-[#2D3748]">{user.name}</p>
-                <p className="text-xs text-gray-500">{user.email}</p>
+          <div className={`p-4 border-b border-gray-200 ${sidebarCollapsed ? 'px-2' : ''}`}>
+            <div className="flex items-center justify-between">
+              <div className={`flex items-center ${sidebarCollapsed ? 'justify-center w-full' : ''}`}>
+                <div className="w-10 h-10 rounded-lg bg-[#ED8936] flex items-center justify-center flex-shrink-0">
+                  <span className="text-white font-bold text-lg">OA</span>
+                </div>
+                {!sidebarCollapsed && (
+                  <div className="ml-3">
+                    <h1 className="text-lg font-semibold text-[#2D3748]">OA办公系统</h1>
+                    <p className="text-xs text-gray-500">高效协作，智能办公</p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
+          {/* 用户信息 */}
+          <div className={`p-4 border-b border-gray-200 ${sidebarCollapsed ? 'px-2' : ''}`}>
+            <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}`}>
+              <div className="w-10 h-10 rounded-full bg-[#ED8936] flex items-center justify-center flex-shrink-0">
+                <User className="h-5 w-5 text-white" />
+              </div>
+              {!sidebarCollapsed && (
+                <div className="overflow-hidden">
+                  <p className="text-sm font-medium text-[#2D3748] truncate">{user.name}</p>
+                  <p className="text-xs text-gray-500 truncate">{user.email}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
           {/* 导航菜单 */}
-          <nav className="flex-1 p-4 space-y-1">
+          <nav className="flex-1 p-2 space-y-1 overflow-y-auto">
             {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
@@ -165,50 +206,70 @@ export default function DashboardLayout({
                   key={item.href}
                   href={item.href}
                   onClick={() => setSidebarOpen(false)}
+                  title={sidebarCollapsed ? item.label : undefined}
                   className={`
-                    flex items-center justify-between px-4 py-3 rounded-lg transition-colors
+                    flex items-center ${sidebarCollapsed ? 'justify-center px-3' : 'justify-between px-4'} py-3 rounded-lg transition-colors group
                     ${isActive 
                       ? 'bg-[#ED8936] text-white' 
                       : 'text-gray-700 hover:bg-gray-100'}
                   `}
                 >
-                  <div className="flex items-center space-x-3">
-                    <Icon className="h-5 w-5" />
-                    <span>{item.label}</span>
+                  <div className={`flex items-center ${sidebarCollapsed ? '' : 'space-x-3'}`}>
+                    <Icon className="h-5 w-5 flex-shrink-0" />
+                    {!sidebarCollapsed && <span>{item.label}</span>}
                   </div>
-                  {item.badge && item.badge > 0 && (
+                  {!sidebarCollapsed && item.badge && item.badge > 0 && (
                     <Badge className="bg-red-500 text-white text-xs px-2 py-0.5">
                       {item.badge > 99 ? '99+' : item.badge}
                     </Badge>
+                  )}
+                  {sidebarCollapsed && item.badge && item.badge > 0 && (
+                    <div className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></div>
                   )}
                 </Link>
               );
             })}
           </nav>
 
+          {/* 折叠按钮 - 平板和桌面 */}
+          <div className="hidden md:flex p-2 border-t border-gray-200 justify-center">
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="p-2 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+              title={sidebarCollapsed ? '展开侧边栏' : '折叠侧边栏'}
+            >
+              {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+            </button>
+          </div>
+
           {/* 退出登录 */}
-          <div className="p-4 border-t border-gray-200">
+          <div className={`p-2 border-t border-gray-200 ${sidebarCollapsed ? 'px-2' : ''}`}>
             <Button
               onClick={handleLogout}
               variant="ghost"
-              className="w-full justify-start text-gray-700 hover:bg-gray-100"
+              className={`w-full ${sidebarCollapsed ? 'justify-center px-3' : 'justify-start'} text-gray-700 hover:bg-gray-100`}
+              title={sidebarCollapsed ? '退出登录' : undefined}
             >
-              <LogOut className="h-5 w-5 mr-3" />
-              退出登录
+              <LogOut className="h-5 w-5 flex-shrink-0" />
+              {!sidebarCollapsed && <span className="ml-3">退出登录</span>}
             </Button>
           </div>
         </div>
       </aside>
 
       {/* 主内容区域 */}
-      <main className="lg:ml-64 min-h-screen pt-16 lg:pt-0">
+      <main className={`
+        min-h-screen transition-all duration-300
+        md:pt-0 pt-16
+        ${sidebarCollapsed ? 'md:ml-20' : 'md:ml-64'}
+      `}>
         {children}
       </main>
 
       {/* 移动端遮罩 */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 z-30 bg-black bg-opacity-50 lg:hidden"
+          className="fixed inset-0 z-30 bg-black bg-opacity-50 md:hidden"
           onClick={() => setSidebarOpen(false)}
         ></div>
       )}

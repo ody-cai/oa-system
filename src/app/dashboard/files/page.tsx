@@ -158,29 +158,40 @@ export default function FilesPage() {
   );
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* 工具栏 */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-[#2D3748]">文件管理</h1>
-          <p className="text-sm text-gray-600 mt-1">
-            路径: {currentPath}
-          </p>
+      <div className="flex flex-col gap-4 mb-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+          <div>
+            <h1 className="text-xl sm:text-2xl font-semibold text-[#2D3748]">文件管理</h1>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+              路径: {currentPath}
+            </p>
+          </div>
+          
+          <Button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+            className="bg-[#ED8936] hover:bg-[#DD7730] w-full sm:w-auto"
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            {uploading ? '上传中...' : '上传文件'}
+          </Button>
         </div>
         
-        <div className="flex items-center gap-3">
-          <div className="relative">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+          <div className="relative flex-1 sm:flex-initial">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
             <Input
               type="text"
               placeholder="搜索文件..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 w-64 border-gray-300"
+              className="pl-10 w-full sm:w-64 border-gray-300"
             />
           </div>
           
-          <div className="flex border border-gray-300 rounded-lg">
+          <div className="flex border border-gray-300 rounded-lg self-end sm:self-auto">
             <button
               onClick={() => setViewMode('grid')}
               className={`p-2 ${viewMode === 'grid' ? 'bg-gray-100' : ''}`}
@@ -194,15 +205,6 @@ export default function FilesPage() {
               <List className="h-4 w-4" />
             </button>
           </div>
-          
-          <Button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="bg-[#ED8936] hover:bg-[#DD7730]"
-          >
-            <Upload className="h-4 w-4 mr-2" />
-            {uploading ? '上传中...' : '上传文件'}
-          </Button>
           
           <input
             ref={fileInputRef}
@@ -221,35 +223,35 @@ export default function FilesPage() {
         </div>
       ) : filteredFiles.length === 0 ? (
         <Card className="border-0 shadow-sm">
-          <CardContent className="p-12 text-center">
+          <CardContent className="p-8 sm:p-12 text-center">
             <Folder className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">
+            <p className="text-sm sm:text-base text-gray-500">
               {searchQuery ? '未找到匹配的文件' : '当前文件夹为空'}
             </p>
             <Button
               onClick={() => fileInputRef.current?.click()}
               variant="outline"
-              className="mt-4 border-[#ED8936] text-[#ED8936]"
+              className="mt-4 border-[#ED8936] text-[#ED8936] text-sm sm:text-base"
             >
               上传第一个文件
             </Button>
           </CardContent>
         </Card>
       ) : viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 sm:gap-4">
           {filteredFiles.map((file) => (
             <Card key={file.id} className="border-0 shadow-sm hover:shadow-md transition-shadow group">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-center h-24 mb-3">
+              <CardContent className="p-3 sm:p-4">
+                <div className="flex items-center justify-center h-16 sm:h-24 mb-2 sm:mb-3">
                   {getFileIcon(file.file_type)}
                 </div>
-                <p className="text-sm font-medium text-[#2D3748] truncate text-center">
+                <p className="text-xs sm:text-sm font-medium text-[#2D3748] truncate text-center">
                   {file.file_name}
                 </p>
                 <p className="text-xs text-gray-500 text-center mt-1">
                   {formatFileSize(file.file_size)}
                 </p>
-                <div className="flex justify-center gap-2 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div className="flex justify-center gap-2 mt-2 sm:mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
                     onClick={() => handleDownload(file)}
                     className="p-1.5 hover:bg-gray-100 rounded"
@@ -276,12 +278,12 @@ export default function FilesPage() {
               {filteredFiles.map((file) => (
                 <div
                   key={file.id}
-                  className="flex items-center justify-between p-4 hover:bg-gray-50 group"
+                  className="flex items-center justify-between p-3 sm:p-4 hover:bg-gray-50 group"
                 >
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
                     {getFileIcon(file.file_type)}
                     <div className="min-w-0">
-                      <p className="text-sm font-medium text-[#2D3748] truncate">
+                      <p className="text-xs sm:text-sm font-medium text-[#2D3748] truncate">
                         {file.file_name}
                       </p>
                       <p className="text-xs text-gray-500">
@@ -289,17 +291,17 @@ export default function FilesPage() {
                       </p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                  <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
                       onClick={() => handleDownload(file)}
-                      className="p-2 hover:bg-gray-100 rounded"
+                      className="p-1.5 sm:p-2 hover:bg-gray-100 rounded"
                       title="下载"
                     >
                       <Download className="h-4 w-4 text-gray-600" />
                     </button>
                     <button
                       onClick={() => handleDelete(file.id)}
-                      className="p-2 hover:bg-gray-100 rounded"
+                      className="p-1.5 sm:p-2 hover:bg-gray-100 rounded"
                       title="删除"
                     >
                       <Trash2 className="h-4 w-4 text-red-500" />

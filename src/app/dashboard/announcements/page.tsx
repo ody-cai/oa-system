@@ -104,47 +104,47 @@ export default function AnnouncementsPage() {
   };
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* 标题栏 */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-[#2D3748]">公告中心</h1>
-          <p className="text-sm text-gray-600 mt-1">
+          <h1 className="text-xl sm:text-2xl font-semibold text-[#2D3748]">公告中心</h1>
+          <p className="text-xs sm:text-sm text-gray-600 mt-1">
             查看和发布公司公告
           </p>
         </div>
         
         <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="bg-[#ED8936] hover:bg-[#DD7730]">
+            <Button className="bg-[#ED8936] hover:bg-[#DD7730] w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               发布公告
             </Button>
           </DialogTrigger>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className="sm:max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
-              <DialogTitle>发布新公告</DialogTitle>
+              <DialogTitle className="text-lg sm:text-xl">发布新公告</DialogTitle>
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4 mt-4">
               <div>
-                <label className="text-sm font-medium text-gray-700">标题</label>
+                <label className="text-xs sm:text-sm font-medium text-gray-700">标题</label>
                 <Input
                   value={newTitle}
                   onChange={(e) => setNewTitle(e.target.value)}
                   placeholder="公告标题"
-                  className="mt-1"
+                  className="mt-1 text-sm sm:text-base"
                   required
                 />
               </div>
               
               <div>
-                <label className="text-sm font-medium text-gray-700">内容</label>
+                <label className="text-xs sm:text-sm font-medium text-gray-700">内容</label>
                 <Textarea
                   value={newContent}
                   onChange={(e) => setNewContent(e.target.value)}
                   placeholder="公告内容..."
                   rows={6}
-                  className="mt-1"
+                  className="mt-1 text-sm sm:text-base"
                   required
                 />
               </div>
@@ -155,9 +155,9 @@ export default function AnnouncementsPage() {
                   id="pinned"
                   checked={isPinned}
                   onChange={(e) => setIsPinned(e.target.checked)}
-                  className="rounded border-gray-300"
+                  className="rounded border-gray-300 w-4 h-4"
                 />
-                <label htmlFor="pinned" className="text-sm text-gray-700">
+                <label htmlFor="pinned" className="text-xs sm:text-sm text-gray-700">
                   置顶公告
                 </label>
               </div>
@@ -167,13 +167,14 @@ export default function AnnouncementsPage() {
                   type="button"
                   variant="outline"
                   onClick={() => setDialogOpen(false)}
+                  className="text-sm sm:text-base"
                 >
                   取消
                 </Button>
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="bg-[#ED8936] hover:bg-[#DD7730]"
+                  className="bg-[#ED8936] hover:bg-[#DD7730] text-sm sm:text-base"
                 >
                   {submitting ? '发布中...' : '发布'}
                 </Button>
@@ -190,20 +191,20 @@ export default function AnnouncementsPage() {
         </div>
       ) : announcements.length === 0 ? (
         <Card className="border-0 shadow-sm">
-          <CardContent className="p-12 text-center">
+          <CardContent className="p-8 sm:p-12 text-center">
             <Bell className="h-12 w-12 text-gray-300 mx-auto mb-4" />
-            <p className="text-gray-500">暂无公告</p>
+            <p className="text-sm sm:text-base text-gray-500">暂无公告</p>
             <Button
               onClick={() => setDialogOpen(true)}
               variant="outline"
-              className="mt-4 border-[#ED8936] text-[#ED8936]"
+              className="mt-4 border-[#ED8936] text-[#ED8936] text-sm sm:text-base"
             >
               发布第一条公告
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
           {announcements.map((announcement) => (
             <Card
               key={announcement.id}
@@ -211,28 +212,28 @@ export default function AnnouncementsPage() {
                 announcement.is_pinned ? 'border-l-4 border-l-[#ED8936]' : ''
               }`}
             >
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
+              <CardContent className="p-4 sm:p-6">
+                <div className="flex items-start gap-3 sm:gap-4">
                   {announcement.is_pinned && (
-                    <Pin className="h-5 w-5 text-[#ED8936] flex-shrink-0 mt-1" />
+                    <Pin className="h-4 w-4 sm:h-5 sm:w-5 text-[#ED8936] flex-shrink-0 mt-1" />
                   )}
-                  <div className="flex-1">
-                    <div className="flex items-start justify-between">
-                      <h3 className="text-lg font-semibold text-[#2D3748]">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2">
+                      <h3 className="text-base sm:text-lg font-semibold text-[#2D3748]">
                         {announcement.title}
                       </h3>
                       {announcement.is_pinned && (
-                        <span className="px-2 py-1 text-xs font-medium bg-[#ED8936] text-white rounded">
+                        <span className="px-2 py-1 text-xs font-medium bg-[#ED8936] text-white rounded self-start flex-shrink-0">
                           置顶
                         </span>
                       )}
                     </div>
-                    <p className="text-gray-600 mt-2 whitespace-pre-wrap">
+                    <p className="text-xs sm:text-sm sm:text-base text-gray-600 mt-2 whitespace-pre-wrap">
                       {announcement.content}
                     </p>
-                    <div className="flex items-center gap-4 mt-4 text-sm text-gray-500">
+                    <div className="flex items-center gap-2 sm:gap-4 mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500">
                       <div className="flex items-center gap-1">
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
                         {formatDate(announcement.created_at)}
                       </div>
                     </div>

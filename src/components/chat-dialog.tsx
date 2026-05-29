@@ -131,8 +131,16 @@ export function ChatDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] h-[600px] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="
+        sm:max-w-[500px] 
+        w-[95vw] max-w-[95vw]
+        md:w-auto md:max-w-[500px]
+        h-[85vh] sm:h-[600px]
+        max-h-[85vh] sm:max-h-[600px]
+        flex flex-col
+        p-0 gap-0
+      ">
+        <DialogHeader className="px-6 py-4 border-b">
           <DialogTitle className="flex items-center gap-2">
             <MessageCircle className="h-5 w-5 text-orange-500" />
             {title}
@@ -142,7 +150,7 @@ export function ChatDialog({
         {/* 消息列表 */}
         <div 
           ref={scrollRef}
-          className="flex-1 overflow-y-auto space-y-3 px-4 py-3 bg-gray-50 rounded-lg"
+          className="flex-1 overflow-y-auto space-y-3 px-4 py-3 bg-gray-50"
         >
           {loading ? (
             <div className="flex items-center justify-center h-full">
@@ -161,13 +169,13 @@ export function ChatDialog({
                 className={`flex ${msg.sender_id === currentUserId ? 'justify-end' : 'justify-start'}`}
               >
                 <div
-                  className={`max-w-[70%] px-4 py-2 rounded-lg ${
+                  className={`max-w-[75%] sm:max-w-[70%] px-3 sm:px-4 py-2 rounded-lg ${
                     msg.sender_id === currentUserId
                       ? 'bg-orange-500 text-white'
                       : 'bg-white border'
                   }`}
                 >
-                  <p className="break-words">{msg.content}</p>
+                  <p className="break-words text-sm sm:text-base">{msg.content}</p>
                   <div className={`flex items-center gap-1 mt-1 text-xs ${
                     msg.sender_id === currentUserId ? 'text-orange-100' : 'text-gray-400'
                   }`}>
@@ -189,7 +197,7 @@ export function ChatDialog({
         </div>
 
         {/* 输入区域 */}
-        <div className="flex gap-2 pt-2">
+        <div className="flex gap-2 p-4 border-t bg-white">
           <Input
             placeholder="输入消息..."
             value={newMessage}
@@ -206,7 +214,7 @@ export function ChatDialog({
           <Button 
             onClick={sendMessage} 
             disabled={!newMessage.trim() || sending}
-            className="bg-orange-500 hover:bg-orange-600"
+            className="bg-orange-500 hover:bg-orange-600 px-3 sm:px-4"
           >
             {sending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

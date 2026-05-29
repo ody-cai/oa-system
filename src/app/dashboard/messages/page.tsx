@@ -88,11 +88,11 @@ export default function MessagesPage() {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-4 sm:p-6 lg:p-8">
       {/* 标题栏 */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-semibold text-[#2D3748]">消息中心</h1>
-        <p className="text-sm text-gray-600 mt-1">
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-semibold text-[#2D3748]">消息中心</h1>
+        <p className="text-xs sm:text-sm text-gray-600 mt-1">
           与同事和管理员的站内即时通讯
         </p>
       </div>
@@ -109,40 +109,40 @@ export default function MessagesPage() {
           <p className="text-sm mt-1">发送或接收消息后会在这里显示</p>
         </div>
       ) : (
-        <div className="space-y-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
           {conversations.map((conv) => (
             <Card 
               key={conv.userId} 
               className="cursor-pointer hover:shadow-md transition-shadow"
               onClick={() => openChat(conv)}
             >
-              <CardContent className="p-4">
+              <CardContent className="p-3 sm:p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-4">
-                    <div className="w-12 h-12 rounded-full bg-[#ED8936] flex items-center justify-center">
-                      <span className="text-white text-lg font-medium">
+                  <div className="flex items-center gap-2 sm:gap-4 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-[#ED8936] flex items-center justify-center flex-shrink-0">
+                      <span className="text-white text-base sm:text-lg font-medium">
                         {conv.userName.charAt(0).toUpperCase()}
                       </span>
                     </div>
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2">
-                        <h3 className="font-medium text-[#2D3748]">{conv.userName}</h3>
-                        <Badge variant={conv.userRole === 'admin' ? 'default' : 'secondary'}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="font-medium text-[#2D3748] text-sm sm:text-base truncate">{conv.userName}</h3>
+                        <Badge variant={conv.userRole === 'admin' ? 'default' : 'secondary'} className="text-xs">
                           {conv.userRole === 'admin' ? '管理员' : '员工'}
                         </Badge>
                       </div>
-                      <p className="text-sm text-gray-500 mt-1 line-clamp-1">
+                      <p className="text-xs sm:text-sm text-gray-500 mt-1 line-clamp-1">
                         {conv.lastMessage}
                       </p>
                     </div>
                   </div>
                   
-                  <div className="text-right">
+                  <div className="text-right flex-shrink-0 ml-2 sm:ml-4">
                     <p className="text-xs text-gray-400 mb-1">
                       {formatTime(conv.lastMessageTime)}
                     </p>
                     {conv.unreadCount > 0 && (
-                      <Badge className="bg-orange-500 text-white">
+                      <Badge className="bg-orange-500 text-white text-xs">
                         {conv.unreadCount}
                       </Badge>
                     )}
