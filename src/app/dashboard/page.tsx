@@ -19,6 +19,7 @@ interface Announcement {
   author_id: string;
   is_pinned: boolean;
   created_at: string;
+  status: string;
 }
 
 interface FileStat {
@@ -26,12 +27,26 @@ interface FileStat {
   total_size: number;
 }
 
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+}
+
 export default function DashboardPage() {
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [fileStat, setFileStat] = useState<FileStat>({ total_files: 0, total_size: 0 });
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
+    // 获取用户信息
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+    
     Promise.all([
       fetchDashboardData(),
       fetchAnnouncements(),
@@ -52,7 +67,13 @@ export default function DashboardPage() {
 
   const fetchAnnouncements = async () => {
     try {
-      const response = await fetch('/api/announcements?limit=5');
+      // 根据用户角色获取公告
+      const params = new URLSearchParams({ limit: '5' });
+      if (user?.role) {
+        params.append('userRole', user.role);
+      }
+      
+      const response = await fetch(`/api/announcements?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
         setAnnouncements(data.announcements || []);

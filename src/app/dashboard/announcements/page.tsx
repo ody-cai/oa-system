@@ -12,7 +12,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Bell, Plus, Pin, Calendar } from 'lucide-react';
+import { Bell, Plus, Pin, Calendar, RotateCcw } from 'lucide-react';
 
 interface Announcement {
   id: string;
@@ -21,6 +21,15 @@ interface Announcement {
   author_id: string;
   is_pinned: boolean;
   created_at: string;
+  status: string;
+  withdrawn_at: string | null;
+}
+
+interface User {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
 }
 
 export default function AnnouncementsPage() {
@@ -31,18 +40,48 @@ export default function AnnouncementsPage() {
   const [newContent, setNewContent] = useState('');
   const [isPinned, setIsPinned] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'withdrawn'>('all');
 
   useEffect(() => {
+    // 获取用户信息
+    const userData = localStorage.getItem('user');
+    if (userData) {
+      setUser(JSON.parse(userData));
+    }
+    
     fetchAnnouncements();
   }, []);
+
+  // 当筛选条件改变时重新获取公告
+  useEffect(() => {
+    if (user) {
+      fetchAnnouncements();
+    }
+  }, [statusFilter, user]);
 
   const fetchAnnouncements = async () => {
     try {
       setLoading(true);
-      const response = await fetch('/api/announcements');
+      // 管理员传递 userRole 参数，可以看到所有公告
+      const params = new URLSearchParams();
+      if (user?.role === 'admin') {
+        params.append('userRole', 'admin');
+      }
+      
+      const response = await fetch(`/api/announcements?${params.toString()}`);
       if (response.ok) {
         const data = await response.json();
-        setAnnouncements(data.announcements || []);
+        let fetchedAnnouncements = data.announcements || [];
+        
+        // 客户端筛选（如果管理员选择了特定状态）
+        if (user?.role === 'admin' && statusFilter !== 'all') {
+          fetchedAnnouncements = fetchedAnnouncements.filter(
+            (a: Announcement) => a.status === statusFilter
+          );
+        }
+        
+        setAnnouncements(fetchedAnnouncements);
       }
     } catch (error) {
       console.error('获取公告失败:', error);
@@ -58,10 +97,6 @@ export default function AnnouncementsPage() {
       alert('请填写标题和内容');
       return;
     }
-
-    // 从 localStorage 获取用户信息
-    const userData = localStorage.getItem('user');
-    const user = userData ? JSON.parse(userData) : null;
 
     setSubmitting(true);
     try {
@@ -93,6 +128,33 @@ export default function AnnouncementsPage() {
     }
   };
 
+  const handleWithdraw = async (announcementId: string) => {
+    if (!confirm('确定要撤回这条公告吗？撤回后普通用户将无法看到。')) {
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/announcements/${announcementId}/withdraw`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userRole: user?.role,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '撤回失败');
+      }
+
+      await fetchAnnouncements();
+      alert('公告已撤回');
+    } catch (error) {
+      console.error('撤回公告失败:', error);
+      alert(error instanceof Error ? error.message : '撤回失败，请重试');
+    }
+  };
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('zh-CN', {
       year: 'numeric',
@@ -114,13 +176,44 @@ export default function AnnouncementsPage() {
           </p>
         </div>
         
-        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="bg-[#ED8936] hover:bg-[#DD7730] w-full sm:w-auto">
-              <Plus className="h-4 w-4 mr-2" />
-              发布公告
-            </Button>
-          </DialogTrigger>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full sm:w-auto">
+          {/* 状态筛选（仅管理员可见） */}
+          {user?.role === 'admin' && (
+            <div className="flex gap-2">
+              <Button
+                variant={statusFilter === 'all' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('all')}
+                className={statusFilter === 'all' ? 'bg-[#ED8936] hover:bg-[#DD7730]' : ''}
+              >
+                全部
+              </Button>
+              <Button
+                variant={statusFilter === 'active' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('active')}
+                className={statusFilter === 'active' ? 'bg-[#ED8936] hover:bg-[#DD7730]' : ''}
+              >
+                正常
+              </Button>
+              <Button
+                variant={statusFilter === 'withdrawn' ? 'default' : 'outline'}
+                size="sm"
+                onClick={() => setStatusFilter('withdrawn')}
+                className={statusFilter === 'withdrawn' ? 'bg-[#ED8936] hover:bg-[#DD7730]' : ''}
+              >
+                已撤回
+              </Button>
+            </div>
+          )}
+          
+          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+            <DialogTrigger asChild>
+              <Button className="bg-[#ED8936] hover:bg-[#DD7730] w-full sm:w-auto">
+                <Plus className="h-4 w-4 mr-2" />
+                发布公告
+              </Button>
+            </DialogTrigger>
           <DialogContent className="sm:max-w-lg w-[95vw] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle className="text-lg sm:text-xl">发布新公告</DialogTitle>
@@ -182,6 +275,7 @@ export default function AnnouncementsPage() {
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </div>
 
       {/* 公告列表 */}
@@ -210,7 +304,7 @@ export default function AnnouncementsPage() {
               key={announcement.id}
               className={`border-0 shadow-sm hover:shadow-md transition-shadow ${
                 announcement.is_pinned ? 'border-l-4 border-l-[#ED8936]' : ''
-              }`}
+              } ${announcement.status === 'withdrawn' ? 'opacity-60' : ''}`}
             >
               <CardContent className="p-4 sm:p-6">
                 <div className="flex items-start gap-3 sm:gap-4">
@@ -222,20 +316,47 @@ export default function AnnouncementsPage() {
                       <h3 className="text-base sm:text-lg font-semibold text-[#2D3748]">
                         {announcement.title}
                       </h3>
-                      {announcement.is_pinned && (
-                        <span className="px-2 py-1 text-xs font-medium bg-[#ED8936] text-white rounded self-start flex-shrink-0">
-                          置顶
-                        </span>
-                      )}
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {announcement.status === 'withdrawn' && (
+                          <span className="px-2 py-1 text-xs font-medium bg-gray-400 text-white rounded self-start">
+                            已撤回
+                          </span>
+                        )}
+                        {announcement.is_pinned && (
+                          <span className="px-2 py-1 text-xs font-medium bg-[#ED8936] text-white rounded self-start">
+                            置顶
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <p className="text-xs sm:text-sm sm:text-base text-gray-600 mt-2 whitespace-pre-wrap">
                       {announcement.content}
                     </p>
-                    <div className="flex items-center gap-2 sm:gap-4 mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500">
-                      <div className="flex items-center gap-1">
-                        <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
-                        {formatDate(announcement.created_at)}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mt-3 sm:mt-4">
+                      <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-500">
+                        <div className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3 sm:h-4 sm:w-4" />
+                          {formatDate(announcement.created_at)}
+                        </div>
+                        {announcement.status === 'withdrawn' && announcement.withdrawn_at && (
+                          <div className="text-gray-400">
+                            撤回于 {formatDate(announcement.withdrawn_at)}
+                          </div>
+                        )}
                       </div>
+                      
+                      {/* 撤回按钮（仅管理员可看到，且只能撤回正常状态的公告） */}
+                      {user?.role === 'admin' && announcement.status === 'active' && (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleWithdraw(announcement.id)}
+                          className="text-gray-600 hover:text-gray-800"
+                        >
+                          <RotateCcw className="h-3 w-3 mr-1" />
+                          撤回
+                        </Button>
+                      )}
                     </div>
                   </div>
                 </div>
