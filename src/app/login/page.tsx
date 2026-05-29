@@ -23,6 +23,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [showContactAdmin, setShowContactAdmin] = useState(false);
+  const [copied, setCopied] = useState(false);
+
+  const copyEmail = async () => {
+    try {
+      await navigator.clipboard.writeText('admin@oa.com');
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('复制失败:', err);
+    }
+  };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -143,14 +154,26 @@ export default function LoginPage() {
           <DialogHeader>
             <DialogTitle>忘记密码</DialogTitle>
             <DialogDescription>
-              如果您忘记了密码,请联系系统管理员重置密码。
+              如果您忘记了密码，请联系系统管理员重置密码。
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">管理员联系方式：</p>
-              <p className="text-sm font-medium text-[#2D3748]">邮箱：admin@oa.com</p>
-              <p className="text-sm text-gray-500 mt-1">请发送邮件说明您的账户邮箱，管理员会为您重置密码。</p>
+              <p className="text-sm text-gray-600 mb-2">管理员邮箱：</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 px-3 py-2 bg-white rounded border text-[#2D3748]">admin@oa.com</code>
+                <Button
+                  onClick={copyEmail}
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                >
+                  {copied ? '已复制' : '复制'}
+                </Button>
+              </div>
+              <p className="text-sm text-gray-500 mt-3">
+                点击复制后，可在您的邮件客户端中粘贴发送。
+              </p>
             </div>
             <Button
               onClick={() => setShowForgotPassword(false)}
@@ -173,10 +196,20 @@ export default function LoginPage() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="p-4 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 mb-2">管理员联系方式：</p>
-              <p className="text-sm font-medium text-[#2D3748]">邮箱：admin@oa.com</p>
-              <p className="text-sm text-gray-500 mt-1">
-                请发送邮件至管理员邮箱，说明您的姓名、部门及需要开通的权限。
+              <p className="text-sm text-gray-600 mb-2">管理员邮箱：</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 px-3 py-2 bg-white rounded border text-[#2D3748]">admin@oa.com</code>
+                <Button
+                  onClick={copyEmail}
+                  variant="outline"
+                  size="sm"
+                  className="shrink-0"
+                >
+                  {copied ? '已复制' : '复制'}
+                </Button>
+              </div>
+              <p className="text-sm text-gray-500 mt-3">
+                请在邮件中说明您的姓名、部门及需要开通的权限。
               </p>
             </div>
             <Button
