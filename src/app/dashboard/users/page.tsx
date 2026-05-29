@@ -27,7 +27,8 @@ import {
   UserCheck,
   UserX,
   Trash2,
-  HardDrive
+  HardDrive,
+  Mail
 } from 'lucide-react';
 
 interface User {
@@ -66,6 +67,20 @@ export default function UsersPage() {
   const [quotaDialogOpen, setQuotaDialogOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [newQuota, setNewQuota] = useState(10); // GB
+  
+  // 邮件相关
+  const [copiedEmail, setCopiedEmail] = useState<string | null>(null);
+  
+  // 复制邮箱
+  const copyEmail = async (email: string) => {
+    try {
+      await navigator.clipboard.writeText(email);
+      setCopiedEmail(email);
+      setTimeout(() => setCopiedEmail(null), 2000);
+    } catch (err) {
+      alert('复制失败，请手动复制');
+    }
+  };
 
   useEffect(() => {
     // 获取当前用户信息
@@ -416,6 +431,16 @@ export default function UsersPage() {
                     </button>
                     
                     <div className="flex items-center gap-2">
+                      {/* 发送邮件按钮 */}
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => copyEmail(user.email)}
+                        className="border-blue-200 text-blue-600 hover:bg-blue-50"
+                      >
+                        <Mail className="h-4 w-4 mr-1" />
+                        {copiedEmail === user.email ? '已复制' : '邮件'}
+                      </Button>
                       <Button
                         variant="outline"
                         size="sm"
