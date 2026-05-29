@@ -45,6 +45,9 @@ export default function DashboardLayout({
 
   // 检测屏幕方向和大小
   useEffect(() => {
+    // 仅在客户端执行
+    if (typeof window === 'undefined') return;
+    
     const checkOrientation = () => {
       const width = window.innerWidth;
       const height = window.innerHeight;
@@ -67,20 +70,28 @@ export default function DashboardLayout({
   }, []);
 
   useEffect(() => {
+    // 仅在客户端执行
+    if (typeof window === 'undefined') return;
+    
     const userData = localStorage.getItem('user');
     if (!userData) {
       router.push('/login');
       return;
     }
     setUser(JSON.parse(userData));
+  }, [router]);
+
+  // 深色模式初始化 - 单独的 useEffect
+  useEffect(() => {
+    // 仅在客户端执行
+    if (typeof window === 'undefined') return;
     
-    // 初始化深色模式
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
     const shouldBeDark = savedTheme === 'dark' || (!savedTheme && prefersDark);
     setIsDarkMode(shouldBeDark);
     document.documentElement.classList.toggle('dark', shouldBeDark);
-  }, [router]);
+  }, []);
 
   // 深色模式切换
   const toggleDarkMode = () => {
@@ -138,15 +149,6 @@ export default function DashboardLayout({
       console.error('获取未读消息数失败:', error);
     }
   };
-
-  useEffect(() => {
-    const userData = localStorage.getItem('user');
-    if (!userData) {
-      router.push('/login');
-      return;
-    }
-    setUser(JSON.parse(userData));
-  }, [router]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -254,7 +256,7 @@ export default function DashboardLayout({
                   onClick={() => setSidebarOpen(false)}
                   title={sidebarCollapsed ? item.label : undefined}
                   className={`
-                    flex items-center ${sidebarCollapsed ? 'justify-center px-3' : 'justify-between px-4'} py-3 rounded-lg transition-colors group
+                    relative flex items-center ${sidebarCollapsed ? 'justify-center px-3' : 'justify-between px-4'} py-3 rounded-lg transition-colors group
                     ${isActive 
                       ? 'bg-primary text-primary-foreground' 
                       : 'text-foreground hover:bg-muted'}
