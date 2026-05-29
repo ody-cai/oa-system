@@ -68,7 +68,13 @@ pnpm start
 - 公告列表: `GET /api/announcements?limit={limit}`
 - 发布公告: `POST /api/announcements`
 
-### 4. 仪表盘
+### 4. 用户管理（管理员专用）
+- 用户列表: `GET /api/users`
+- 添加用户: `POST /api/users`
+- 更新状态: `PATCH /api/users/{id}`
+- 删除用户: `DELETE /api/users/{id}`
+
+### 5. 仪表盘
 - 文件统计展示
 - 最新公告展示
 - 快捷操作入口

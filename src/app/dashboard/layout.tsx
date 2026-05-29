@@ -12,7 +12,8 @@ import {
   LogOut,
   Menu,
   X,
-  User
+  User,
+  Users
 } from 'lucide-react';
 
 interface User {
@@ -47,11 +48,16 @@ export default function DashboardLayout({
   };
 
   const menuItems = [
-    { href: '/dashboard', label: '仪表盘', icon: Home },
-    { href: '/dashboard/files', label: '文件管理', icon: FileText },
-    { href: '/dashboard/announcements', label: '公告中心', icon: MessageSquare },
-    { href: '/dashboard/settings', label: '系统设置', icon: Settings },
+    { href: '/dashboard', label: '仪表盘', icon: Home, adminOnly: false },
+    { href: '/dashboard/files', label: '文件管理', icon: FileText, adminOnly: false },
+    { href: '/dashboard/announcements', label: '公告中心', icon: MessageSquare, adminOnly: false },
+    { href: '/dashboard/users', label: '用户管理', icon: Users, adminOnly: true },
+    { href: '/dashboard/settings', label: '系统设置', icon: Settings, adminOnly: false },
   ];
+
+  const filteredMenuItems = menuItems.filter(
+    (item) => !item.adminOnly || user?.role === 'admin'
+  );
 
   if (!user) {
     return (
@@ -105,7 +111,7 @@ export default function DashboardLayout({
 
           {/* 导航菜单 */}
           <nav className="flex-1 p-4 space-y-1">
-            {menuItems.map((item) => {
+            {filteredMenuItems.map((item) => {
               const Icon = item.icon;
               const isActive = pathname === item.href;
               return (
