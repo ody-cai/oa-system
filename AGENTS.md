@@ -178,11 +178,12 @@ pnpm start
 
 | 更新类型 | 需要更新的文件 |
 |----------|----------------|
-| 新增 API | `README.md` (API 文档章节) |
-| 新增页面 | `README.md` (功能特性章节) |
-| 数据库变更 | `README.md` (数据库初始化 SQL) |
-| 功能变更 | `README.md` + `AGENTS.md` |
-| 依赖更新 | `README.md` (技术栈章节) |
+| 新增 API | `README.md` (API 文档章节) + `CHANGELOG.md` |
+| 新增页面 | `README.md` (功能特性章节) + `CHANGELOG.md` |
+| 数据库变更 | `README.md` (数据库初始化 SQL) + `CHANGELOG.md` |
+| 功能变更 | `README.md` + `AGENTS.md` + `CHANGELOG.md` |
+| 依赖更新 | `README.md` (技术栈章节) + `CHANGELOG.md` |
+| 版本发布 | `package.json` (version) + `CHANGELOG.md` |
 
 ### 同步流程
 
@@ -202,3 +203,37 @@ README.md 为中英双语格式，更新时需同时更新中英文两个部分�
 - 中文部分在上
 - English 部分在下
 - 顶部有语言切换导航
+
+## 版本管理规范
+
+### 版本号格式
+
+遵循语义化版本 (Semantic Versioning)：`主版本号.次版本号.修订号`
+
+- **主版本号 (Major)**: 重大架构变更或不兼容更新
+- **次版本号 (Minor)**: 新增功能，向下兼容
+- **修订号 (Patch)**: Bug 修复，向下兼容
+
+### 版本更新流程
+
+1. **更新 package.json** 中的 version 字段
+2. **更新 CHANGELOG.md** 记录变更内容
+3. **提交代码** 并推送到 GitHub
+
+### CHANGELOG.md 格式
+
+```markdown
+## [版本号] - 日期
+
+### 新增功能 | Added
+- 新增 xxx 功能
+
+### 优化改进 | Changed
+- 优化 xxx 性能
+
+### 问题修复 | Fixed
+- 修复 xxx 问题
+
+### 技术实现 | Technical
+- 使用 xxx 技术实现
+```
