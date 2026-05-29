@@ -4,6 +4,45 @@ All notable changes to this project will be documented in this file.
 
 ---
 
+## [1.1.0] - 2025-05-30
+
+### 新增功能 | Added
+
+- **云存储仓库系统** - 支持三种仓库类型
+  - 公共仓库：所有人可见
+  - 私人仓库：仅自己可见
+  - 群组仓库：通过邀请加入，支持成员管理
+- **仓库成员管理** - 群组仓库支持邀请成员、设置角色（管理员/普通成员）、移除成员
+- **文件仓库关联** - 文件可关联到指定仓库，支持按仓库过滤
+
+### 数据库变更 | Database
+
+- 新增 `repositories` 表 - 存储仓库信息
+- 新增 `repository_members` 表 - 存储群组仓库成员
+- 新增 `repository_invitations` 表 - 存储邀请记录
+- `files` 表新增 `repository_id` 字段 - 关联仓库
+
+### API 接口 | API
+
+- `GET /api/repositories` - 获取仓库列表
+- `POST /api/repositories` - 创建仓库
+- `GET /api/repositories/{id}` - 获取仓库详情
+- `PATCH /api/repositories/{id}` - 更新仓库
+- `DELETE /api/repositories/{id}` - 删除仓库
+- `GET /api/repositories/{id}/members` - 获取成员列表
+- `POST /api/repositories/{id}/members` - 邀请成员
+- `PATCH /api/repositories/{id}/members` - 更新成员角色
+- `DELETE /api/repositories/{id}/members` - 移除成员
+
+### 页面更新 | Pages
+
+- 新增仓库列表页面 `/dashboard/repositories`
+- 新增仓库成员管理页面 `/dashboard/repositories/{id}/members`
+- 更新文件管理页面支持仓库过滤
+- 侧边栏导航新增"云存储仓库"入口
+
+---
+
 ## [1.0.0] - 2025-05-30
 
 ### 新增功能 | Added

@@ -13,6 +13,7 @@
 ### 功能特性
 
 - **用户认证** - 安全的登录系统，支持角色权限管理（管理员/普通员工）
+- **云存储仓库** - 支持公共仓库、私人仓库、群组仓库三种类型
 - **文件管理** - 支持文件上传、下载、预览、删除，基于 S3 兼容对象存储
 - **存储配额** - 每个用户独立的存储空间配额管理
 - **公告管理** - 企业公告发布与置顶功能
@@ -117,6 +118,7 @@ CREATE TABLE files (
   file_type VARCHAR(100),
   uploader_id UUID NOT NULL REFERENCES users(id),
   folder_path VARCHAR(500) DEFAULT '/',
+  repository_id UUID REFERENCES repositories(id) ON DELETE SET NULL,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ
 );
@@ -142,11 +144,51 @@ CREATE TABLE messages (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
+-- 仓库表
+CREATE TABLE repositories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(255) NOT NULL,
+  description TEXT,
+  type VARCHAR(20) NOT NULL CHECK (type IN ('public', 'private', 'group')),
+  owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 仓库成员表（群组仓库）
+CREATE TABLE repository_members (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  repository_id UUID NOT NULL REFERENCES repositories(id) ON DELETE CASCADE,
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role VARCHAR(20) NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member')),
+  invited_by UUID REFERENCES users(id),
+  joined_at TIMESTAMPTZ DEFAULT NOW(),
+  UNIQUE(repository_id, user_id)
+);
+
+-- 仓库邀请表
+CREATE TABLE repository_invitations (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  repository_id UUID NOT NULL REFERENCES repositories(id) ON DELETE CASCADE,
+  inviter_id UUID NOT NULL REFERENCES users(id),
+  invitee_email VARCHAR(255) NOT NULL,
+  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'expired')),
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  expires_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '7 days')
+);
+
+-- 为 files 表添加仓库字段
+ALTER TABLE files ADD COLUMN repository_id UUID REFERENCES repositories(id) ON DELETE SET NULL;
+
 -- 创建索引
 CREATE INDEX users_email_idx ON users(email);
 CREATE INDEX files_uploader_id_idx ON files(uploader_id);
 CREATE INDEX messages_sender_id_idx ON messages(sender_id);
 CREATE INDEX messages_receiver_id_idx ON messages(receiver_id);
+CREATE INDEX idx_repositories_owner ON repositories(owner_id);
+CREATE INDEX idx_repositories_type ON repositories(type);
+CREATE INDEX idx_repository_members_user ON repository_members(user_id);
+CREATE INDEX idx_files_repository ON files(repository_id);
 ```
 
 5. **创建初始管理员账号**
@@ -183,6 +225,20 @@ pnpm dev
 | GET | `/api/files/download` | 获取下载链接 |
 | DELETE | `/api/files/{id}` | 删除文件 |
 | GET | `/api/files/stats` | 文件统计 |
+
+#### 仓库接口
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/repositories` | 获取仓库列表 |
+| POST | `/api/repositories` | 创建仓库 |
+| GET | `/api/repositories/{id}` | 获取仓库详情 |
+| PATCH | `/api/repositories/{id}` | 更新仓库 |
+| DELETE | `/api/repositories/{id}` | 删除仓库 |
+| GET | `/api/repositories/{id}/members` | 获取成员列表 |
+| POST | `/api/repositories/{id}/members` | 邀请成员 |
+| PATCH | `/api/repositories/{id}/members` | 更新成员角色 |
+| DELETE | `/api/repositories/{id}/members` | 移除成员 |
 
 #### 公告接口
 

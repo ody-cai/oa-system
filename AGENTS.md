@@ -57,7 +57,19 @@ pnpm start
 - 用户信息存储在 localStorage
 - 路由保护：dashboard 页面需要登录
 
-### 2. 文件管理
+### 2. 云存储仓库
+- 仓库列表: `GET /api/repositories?userId={userId}`
+- 创建仓库: `POST /api/repositories`
+- 仓库详情: `GET /api/repositories/{id}`
+- 更新仓库: `PATCH /api/repositories/{id}`
+- 删除仓库: `DELETE /api/repositories/{id}`
+- 成员管理: `GET/POST/PATCH/DELETE /api/repositories/{id}/members`
+- 三种仓库类型：
+  - 公共仓库 (public)：所有人可见
+  - 私人仓库 (private)：仅自己可见
+  - 群组仓库 (group)：邀请成员可见
+
+### 3. 文件管理
 - 文件上传: `POST /api/files/upload` (集成云存储)
 - 文件下载: `GET /api/files/download?key={fileKey}`
 - 文件删除: `DELETE /api/files/{id}`
@@ -106,6 +118,32 @@ pnpm start
 - 管理员可在用户管理页面调整任何用户的配额
 - 文件上传时会自动检查配额，超出则拒绝上传
 
+### repositories 表
+- id: UUID (主键)
+- name: 仓库名称
+- description: 描述
+- type: 类型 (public/private/group)
+- owner_id: 所有者ID (外键 -> users.id)
+- created_at: 创建时间
+- updated_at: 更新时间
+
+### repository_members 表
+- id: UUID (主键)
+- repository_id: 仓库ID (外键 -> repositories.id)
+- user_id: 用户ID (外键 -> users.id)
+- role: 角色 (admin/member)
+- invited_by: 邀请人ID (外键 -> users.id)
+- joined_at: 加入时间
+
+### repository_invitations 表
+- id: UUID (主键)
+- repository_id: 仓库ID (外键 -> repositories.id)
+- inviter_id: 邀请人ID (外键 -> users.id)
+- invitee_email: 被邀请人邮箱
+- status: 状态 (pending/accepted/rejected/expired)
+- created_at: 创建时间
+- expires_at: 过期时间
+
 ### files 表
 - id: UUID (主键)
 - file_key: 对象存储key
@@ -114,6 +152,7 @@ pnpm start
 - file_type: 文件类型
 - uploader_id: 上传者ID
 - folder_path: 文件夹路径
+- repository_id: 仓库ID (外键 -> repositories.id)
 
 ### announcements 表
 - id: UUID (主键)
