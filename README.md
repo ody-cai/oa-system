@@ -1,8 +1,16 @@
-# OA 办公自动化系统
+# OA 办公自动化系统 | OA Office Automation System
+
+[English](#english) | [中文](#中文)
+
+---
+
+<a name="中文"></a>
+
+## 中文
 
 一个现代化的企业办公自动化系统，集成云存储、文件管理、公告发布、用户管理和站内即时通讯等功能。
 
-## 功能特性
+### 功能特性
 
 - **用户认证** - 安全的登录系统，支持角色权限管理（管理员/普通员工）
 - **文件管理** - 支持文件上传、下载、预览、删除，基于 S3 兼容对象存储
@@ -12,7 +20,7 @@
 - **在线状态** - 用户在线状态实时显示
 - **用户管理** - 管理员可管理用户账号、调整存储配额
 
-## 技术栈
+### 技术栈
 
 | 技术 | 版本 | 用途 |
 |------|------|------|
@@ -24,7 +32,7 @@
 | Supabase | - | PostgreSQL 数据库 |
 | S3 Storage | - | 对象存储 |
 
-## 项目结构
+### 项目结构
 
 ```
 ├── public/                 # 静态资源
@@ -42,21 +50,21 @@
 └── next.config.ts          # Next.js 配置
 ```
 
-## 快速开始
+### 快速开始
 
-### 环境要求
+#### 环境要求
 
 - Node.js 18+
 - pnpm 8+
 - Supabase 账号
 - S3 兼容对象存储服务
 
-### 安装步骤
+#### 安装步骤
 
 1. **克隆仓库**
 
 ```bash
-git clone https://github.com/your-username/oa-system.git
+git clone https://github.com/ody-cai/oa-system.git
 cd oa-system
 ```
 
@@ -158,15 +166,15 @@ pnpm dev
 
 访问 http://localhost:5000 即可使用。
 
-## API 文档
+### API 文档
 
-### 认证接口
+#### 认证接口
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | POST | `/api/auth/login` | 用户登录 |
 
-### 文件接口
+#### 文件接口
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -176,14 +184,14 @@ pnpm dev
 | DELETE | `/api/files/{id}` | 删除文件 |
 | GET | `/api/files/stats` | 文件统计 |
 
-### 公告接口
+#### 公告接口
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
 | GET | `/api/announcements` | 获取公告列表 |
 | POST | `/api/announcements` | 发布公告 |
 
-### 用户接口（管理员）
+#### 用户接口（管理员）
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -192,7 +200,7 @@ pnpm dev
 | PATCH | `/api/users/{id}` | 更新用户 |
 | DELETE | `/api/users/{id}` | 删除用户 |
 
-### 消息接口
+#### 消息接口
 
 | 方法 | 路径 | 说明 |
 |------|------|------|
@@ -201,21 +209,21 @@ pnpm dev
 | POST | `/api/messages/read` | 标记已读 |
 | GET | `/api/messages/unread` | 未读消息数 |
 
-## 部署说明
+### 部署说明
 
-### 构建生产版本
+#### 构建生产版本
 
 ```bash
 pnpm build
 ```
 
-### 启动生产服务
+#### 启动生产服务
 
 ```bash
 pnpm start
 ```
 
-### Docker 部署（可选）
+#### Docker 部署（可选）
 
 ```dockerfile
 FROM node:18-alpine
@@ -228,30 +236,284 @@ EXPOSE 5000
 CMD ["pnpm", "start"]
 ```
 
-## 开发规范
+### 开发规范
 
 - 使用 TypeScript strict 模式
 - 遵循 ESLint 规则
 - 数据库字段使用 snake_case
 - 前端组件使用 shadcn/ui
 
-## 安全注意事项
+### 安全注意事项
 
 1. **密码存储**：当前为明文存储，生产环境请使用 bcrypt
 2. **环境变量**：请勿将 `.env` 文件提交到版本控制
 3. **HTTPS**：生产环境强制使用 HTTPS
 4. **RLS 策略**：建议配置 Supabase RLS 策略增强数据安全
 
-## 许可证
+---
+
+<a name="english"></a>
+
+## English
+
+A modern enterprise office automation system with integrated cloud storage, file management, announcement publishing, user management, and internal instant messaging.
+
+### Features
+
+- **User Authentication** - Secure login system with role-based access control (Admin/Employee)
+- **File Management** - Upload, download, preview, and delete files with S3-compatible object storage
+- **Storage Quota** - Independent storage quota management for each user
+- **Announcement Management** - Publish and pin company announcements
+- **Internal Messaging** - Instant messaging between users with read receipts
+- **Online Status** - Real-time user online status display
+- **User Management** - Admins can manage user accounts and adjust storage quotas
+
+### Tech Stack
+
+| Technology | Version | Purpose |
+|------------|---------|---------|
+| Next.js | 16 | Full-stack Framework (App Router) |
+| React | 19 | Frontend UI Library |
+| TypeScript | 5 | Type Safety |
+| Tailwind CSS | 4 | Styling Framework |
+| shadcn/ui | - | UI Component Library |
+| Supabase | - | PostgreSQL Database |
+| S3 Storage | - | Object Storage |
+
+### Project Structure
+
+```
+├── public/                 # Static assets
+├── scripts/                # Build and start scripts
+├── src/
+│   ├── app/                # Pages and layouts
+│   │   ├── api/            # Backend API routes
+│   │   ├── login/          # Login page
+│   │   └── dashboard/      # Dashboard and sub-pages
+│   ├── components/ui/      # Shadcn UI components
+│   ├── hooks/              # Custom Hooks
+│   ├── lib/                # Utilities
+│   └── storage/            # Data storage
+│       └── database/       # Database client
+└── next.config.ts          # Next.js configuration
+```
+
+### Quick Start
+
+#### Requirements
+
+- Node.js 18+
+- pnpm 8+
+- Supabase account
+- S3-compatible object storage service
+
+#### Installation
+
+1. **Clone the repository**
+
+```bash
+git clone https://github.com/ody-cai/oa-system.git
+cd oa-system
+```
+
+2. **Install dependencies**
+
+```bash
+pnpm install
+```
+
+3. **Configure environment variables**
+
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` with your configuration:
+
+| Variable | Description |
+|----------|-------------|
+| `COZE_SUPABASE_URL` | Supabase project URL |
+| `COZE_SUPABASE_ANON_KEY` | Supabase anonymous key |
+| `COZE_BUCKET_ENDPOINT_URL` | S3 storage endpoint URL |
+| `COZE_BUCKET_NAME` | Storage bucket name |
+
+4. **Initialize Database**
+
+Execute the following SQL in Supabase console to create tables:
+
+```sql
+-- Users table
+CREATE TABLE users (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  email VARCHAR(255) NOT NULL UNIQUE,
+  name VARCHAR(128) NOT NULL,
+  password_hash VARCHAR(255) NOT NULL,
+  role VARCHAR(20) NOT NULL DEFAULT 'employee',
+  is_active BOOLEAN DEFAULT TRUE,
+  storage_quota INTEGER DEFAULT 10737418240,
+  last_active_at TIMESTAMPTZ,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ
+);
+
+-- Files table
+CREATE TABLE files (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  file_key VARCHAR(500) NOT NULL,
+  file_name VARCHAR(255) NOT NULL,
+  file_size INTEGER NOT NULL,
+  file_type VARCHAR(100),
+  uploader_id UUID NOT NULL REFERENCES users(id),
+  folder_path VARCHAR(500) DEFAULT '/',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ
+);
+
+-- Announcements table
+CREATE TABLE announcements (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(255) NOT NULL,
+  content TEXT NOT NULL,
+  author_id UUID NOT NULL REFERENCES users(id),
+  is_pinned BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ
+);
+
+-- Messages table
+CREATE TABLE messages (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  sender_id UUID NOT NULL REFERENCES users(id),
+  receiver_id UUID NOT NULL REFERENCES users(id),
+  content TEXT NOT NULL,
+  is_read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create indexes
+CREATE INDEX users_email_idx ON users(email);
+CREATE INDEX files_uploader_id_idx ON files(uploader_id);
+CREATE INDEX messages_sender_id_idx ON messages(sender_id);
+CREATE INDEX messages_receiver_id_idx ON messages(receiver_id);
+```
+
+5. **Create initial admin account**
+
+```sql
+INSERT INTO users (email, name, password_hash, role)
+VALUES ('admin@example.com', 'Admin', 'your-password', 'admin');
+```
+
+> Note: Use bcrypt for password hashing in production
+
+6. **Start development server**
+
+```bash
+pnpm dev
+```
+
+Visit http://localhost:5000 to use the application.
+
+### API Documentation
+
+#### Authentication
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/login` | User login |
+
+#### Files
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/files` | Get file list |
+| POST | `/api/files/upload` | Upload file |
+| GET | `/api/files/download` | Get download link |
+| DELETE | `/api/files/{id}` | Delete file |
+| GET | `/api/files/stats` | File statistics |
+
+#### Announcements
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/announcements` | Get announcement list |
+| POST | `/api/announcements` | Publish announcement |
+
+#### Users (Admin)
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/users` | Get user list |
+| POST | `/api/users` | Create user |
+| PATCH | `/api/users/{id}` | Update user |
+| DELETE | `/api/users/{id}` | Delete user |
+
+#### Messages
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/messages` | Get message list |
+| POST | `/api/messages` | Send message |
+| POST | `/api/messages/read` | Mark as read |
+| GET | `/api/messages/unread` | Unread message count |
+
+### Deployment
+
+#### Build for production
+
+```bash
+pnpm build
+```
+
+#### Start production server
+
+```bash
+pnpm start
+```
+
+#### Docker Deployment (Optional)
+
+```dockerfile
+FROM node:18-alpine
+WORKDIR /app
+COPY package.json pnpm-lock.yaml ./
+RUN npm install -g pnpm && pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm build
+EXPOSE 5000
+CMD ["pnpm", "start"]
+```
+
+### Development Guidelines
+
+- Use TypeScript strict mode
+- Follow ESLint rules
+- Use snake_case for database fields
+- Use shadcn/ui for frontend components
+
+### Security Notes
+
+1. **Password Storage**: Currently plain text, use bcrypt in production
+2. **Environment Variables**: Never commit `.env` files to version control
+3. **HTTPS**: Enforce HTTPS in production
+4. **RLS Policies**: Configure Supabase RLS policies for enhanced data security
+
+---
+
+## License | 许可证
 
 MIT License
 
-## 贡献指南
+## Contributing | 贡献指南
 
-欢迎提交 Issue 和 Pull Request！
+Issues and Pull Requests are welcome!
 
-1. Fork 本仓库
-2. 创建特性分支 (`git checkout -b feature/AmazingFeature`)
-3. 提交更改 (`git commit -m 'Add some AmazingFeature'`)
-4. 推送到分支 (`git push origin feature/AmazingFeature`)
-5. 创建 Pull Request
+1. Fork this repository
+2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
+3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
+4. Push to the branch (`git push origin feature/AmazingFeature`)
+5. Create a Pull Request
+
+---
+
+**Repository | 仓库地址**: https://github.com/ody-cai/oa-system
