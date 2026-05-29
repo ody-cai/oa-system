@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { FilePreviewDialog } from '@/components/file-preview-dialog';
 import {
   Upload,
   Folder,
@@ -20,6 +21,7 @@ import {
   List,
   MoreVertical,
   FolderPlus,
+  Eye,
 } from 'lucide-react';
 
 interface FileItem {
@@ -39,11 +41,21 @@ export default function FilesPage() {
   const [uploading, setUploading] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [searchQuery, setSearchQuery] = useState('');
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const [previewFileId, setPreviewFileId] = useState<string | null>(null);
+  const [previewFileName, setPreviewFileName] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchFiles();
   }, [currentPath]);
+
+  // 预览文件
+  const handlePreview = (file: FileItem) => {
+    setPreviewFileId(file.id);
+    setPreviewFileName(file.file_name);
+    setPreviewOpen(true);
+  };
 
   const fetchFiles = async () => {
     try {
@@ -253,6 +265,13 @@ export default function FilesPage() {
                 </p>
                 <div className="flex justify-center gap-2 mt-2 sm:mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
                   <button
+                    onClick={() => handlePreview(file)}
+                    className="p-1.5 hover:bg-gray-100 rounded"
+                    title="预览"
+                  >
+                    <Eye className="h-4 w-4 text-gray-600" />
+                  </button>
+                  <button
                     onClick={() => handleDownload(file)}
                     className="p-1.5 hover:bg-gray-100 rounded"
                     title="下载"
@@ -293,6 +312,13 @@ export default function FilesPage() {
                   </div>
                   <div className="flex items-center gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                     <button
+                      onClick={() => handlePreview(file)}
+                      className="p-1.5 sm:p-2 hover:bg-gray-100 rounded"
+                      title="预览"
+                    >
+                      <Eye className="h-4 w-4 text-gray-600" />
+                    </button>
+                    <button
                       onClick={() => handleDownload(file)}
                       className="p-1.5 sm:p-2 hover:bg-gray-100 rounded"
                       title="下载"
@@ -313,6 +339,14 @@ export default function FilesPage() {
           </CardContent>
         </Card>
       )}
+
+      {/* 文件预览对话框 */}
+      <FilePreviewDialog
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+        fileId={previewFileId}
+        fileName={previewFileName}
+      />
     </div>
   );
 }
