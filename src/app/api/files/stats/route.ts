@@ -5,7 +5,6 @@ export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const repositoryId = searchParams.get('repositoryId');
     
     const client = getSupabaseClient();
     
@@ -14,11 +13,8 @@ export async function GET(request: NextRequest) {
       .from('files')
       .select('file_size');
     
-    // 如果指定了仓库ID，只查询该仓库的文件
-    if (repositoryId) {
-      query = query.eq('repository_id', repositoryId);
-    } else if (userId) {
-      // 如果指定了用户ID但未指定仓库，只查询该用户的文件
+    // 如果指定了用户ID，只查询该用户的文件
+    if (userId) {
       query = query.eq('uploader_id', userId);
     }
 

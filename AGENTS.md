@@ -57,19 +57,7 @@ pnpm start
 - 用户信息存储在 localStorage
 - 路由保护：dashboard 页面需要登录
 
-### 2. 云存储仓库
-- 仓库列表: `GET /api/repositories?userId={userId}`
-- 创建仓库: `POST /api/repositories`
-- 仓库详情: `GET /api/repositories/{id}`
-- 更新仓库: `PATCH /api/repositories/{id}`
-- 删除仓库: `DELETE /api/repositories/{id}`
-- 成员管理: `GET/POST/PATCH/DELETE /api/repositories/{id}/members`
-- 三种仓库类型：
-  - 公共仓库 (public)：所有人可见
-  - 私人仓库 (private)：仅自己可见
-  - 群组仓库 (group)：邀请成员可见
-
-### 3. 文件管理
+### 2. 文件管理
 - 文件上传: `POST /api/files/upload` (集成云存储)
 - 文件下载: `GET /api/files/download?key={fileKey}`
 - 文件删除: `DELETE /api/files/{id}`
@@ -118,32 +106,6 @@ pnpm start
 - 管理员可在用户管理页面调整任何用户的配额
 - 文件上传时会自动检查配额，超出则拒绝上传
 
-### repositories 表
-- id: UUID (主键)
-- name: 仓库名称
-- description: 描述
-- type: 类型 (public/private/group)
-- owner_id: 所有者ID (外键 -> users.id)
-- created_at: 创建时间
-- updated_at: 更新时间
-
-### repository_members 表
-- id: UUID (主键)
-- repository_id: 仓库ID (外键 -> repositories.id)
-- user_id: 用户ID (外键 -> users.id)
-- role: 角色 (admin/member)
-- invited_by: 邀请人ID (外键 -> users.id)
-- joined_at: 加入时间
-
-### repository_invitations 表
-- id: UUID (主键)
-- repository_id: 仓库ID (外键 -> repositories.id)
-- inviter_id: 邀请人ID (外键 -> users.id)
-- invitee_email: 被邀请人邮箱
-- status: 状态 (pending/accepted/rejected/expired)
-- created_at: 创建时间
-- expires_at: 过期时间
-
 ### files 表
 - id: UUID (主键)
 - file_key: 对象存储key
@@ -152,7 +114,6 @@ pnpm start
 - file_type: 文件类型
 - uploader_id: 上传者ID
 - folder_path: 文件夹路径
-- repository_id: 仓库ID (外键 -> repositories.id)
 
 ### announcements 表
 - id: UUID (主键)
@@ -196,83 +157,5 @@ pnpm start
 
 1. 文件上传功能已集成云存储，使用 S3Storage SDK
 2. 所有文件下载使用预签名 URL，支持跨域
-3. 用户密码已使用 bcrypt 加密存储，salt rounds = 10
+3. 用户密码当前为明文存储，生产环境需改用 bcrypt
 4. RLS 策略暂未配置，后续实现登录功能时需补充
-
-## GitHub 同步规范 [重要]
-
-**仓库地址**: https://github.com/ody-cai/oa-system
-
-### 同步要求
-
-当网站内容发生以下更新时，**必须同步更新 GitHub 仓库**：
-
-1. **功能新增** - 新增 API 接口、页面、模块时
-2. **功能变更** - 接口参数、返回值、业务逻辑变更时
-3. **数据库变更** - 表结构、字段、索引变更时
-4. **技术栈更新** - 依赖版本、框架版本变更时
-5. **重要修复** - 安全漏洞、性能优化等
-
-### 需要更新的文件
-
-| 更新类型 | 需要更新的文件 |
-|----------|----------------|
-| 新增 API | `README.md` (API 文档章节) + `CHANGELOG.md` |
-| 新增页面 | `README.md` (功能特性章节) + `CHANGELOG.md` |
-| 数据库变更 | `README.md` (数据库初始化 SQL) + `CHANGELOG.md` |
-| 功能变更 | `README.md` + `AGENTS.md` + `CHANGELOG.md` |
-| 依赖更新 | `README.md` (技术栈章节) + `CHANGELOG.md` |
-| 版本发布 | `package.json` (version) + `CHANGELOG.md` |
-
-### 同步流程
-
-```bash
-# 1. 更新相关文档
-# 2. 提交代码
-git add .
-git commit -m "docs: 更新 xxx 功能文档"
-
-# 3. 推送到 GitHub
-git push origin main
-```
-
-### README.md 结构
-
-README.md 为中英双语格式，更新时需同时更新中英文两个部分：
-- 中文部分在上
-- English 部分在下
-- 顶部有语言切换导航
-
-## 版本管理规范
-
-### 版本号格式
-
-遵循语义化版本 (Semantic Versioning)：`主版本号.次版本号.修订号`
-
-- **主版本号 (Major)**: 重大架构变更或不兼容更新
-- **次版本号 (Minor)**: 新增功能，向下兼容
-- **修订号 (Patch)**: Bug 修复，向下兼容
-
-### 版本更新流程
-
-1. **更新 package.json** 中的 version 字段
-2. **更新 CHANGELOG.md** 记录变更内容
-3. **提交代码** 并推送到 GitHub
-
-### CHANGELOG.md 格式
-
-```markdown
-## [版本号] - 日期
-
-### 新增功能 | Added
-- 新增 xxx 功能
-
-### 优化改进 | Changed
-- 优化 xxx 性能
-
-### 问题修复 | Fixed
-- 修复 xxx 问题
-
-### 技术实现 | Technical
-- 使用 xxx 技术实现
-```

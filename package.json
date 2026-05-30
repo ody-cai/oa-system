@@ -1,7 +1,6 @@
 {
-  "name": "oa-system",
-  "version": "1.1.0",
-  "description": "OA办公自动化系统 - 集成云存储、文件管理、公告发布、用户管理和站内即时通讯",
+  "name": "projects",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "build": "bash ./scripts/build.sh",
@@ -44,7 +43,6 @@
     "@radix-ui/react-toggle-group": "^1.1.11",
     "@radix-ui/react-tooltip": "^1.2.8",
     "@supabase/supabase-js": "2.95.3",
-    "bcrypt": "^6.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cmdk": "^1.1.1",
@@ -75,7 +73,6 @@
   "devDependencies": {
     "@react-dev-inspector/middleware": "^2.0.1",
     "@tailwindcss/postcss": "^4",
-    "@types/bcrypt": "^6.0.0",
     "@types/node": "^20",
     "@types/pg": "^8.16.0",
     "@types/react": "^19",

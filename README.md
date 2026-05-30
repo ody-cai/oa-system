@@ -1,575 +1,363 @@
-# OA 办公自动化系统 | OA Office Automation System
+# projects
 
-[English](#english) | [中文](#中文)
+这是一个基于 [Next.js 16](https://nextjs.org) + [shadcn/ui](https://ui.shadcn.com) 的全栈应用项目，由扣子编程 CLI 创建。
 
----
+## 快速开始
 
-<a name="中文"></a>
-
-## 中文
-
-一个现代化的企业办公自动化系统，集成云存储、文件管理、公告发布、用户管理和站内即时通讯等功能。
-
-### 功能特性
-
-- **用户认证** - 安全的登录系统，支持角色权限管理（管理员/普通员工）
-- **云存储仓库** - 支持公共仓库、私人仓库、群组仓库三种类型
-- **文件管理** - 支持文件上传、下载、预览、删除，基于 S3 兼容对象存储
-- **存储配额** - 每个用户独立的存储空间配额管理
-- **公告管理** - 企业公告发布与置顶功能
-- **站内通讯** - 用户间即时消息，支持已读回执
-- **在线状态** - 用户在线状态实时显示
-- **用户管理** - 管理员可管理用户账号、调整存储配额
-
-### 技术栈
-
-| 技术 | 版本 | 用途 |
-|------|------|------|
-| Next.js | 16 | 全栈框架（App Router） |
-| React | 19 | 前端 UI 库 |
-| TypeScript | 5 | 类型安全 |
-| Tailwind CSS | 4 | 样式框架 |
-| shadcn/ui | - | UI 组件库 |
-| Supabase | - | PostgreSQL 数据库 |
-| S3 Storage | - | 对象存储 |
-
-### 项目结构
-
-```
-├── public/                 # 静态资源
-├── scripts/                # 构建与启动脚本
-├── src/
-│   ├── app/                # 页面路由与布局
-│   │   ├── api/            # 后端 API 路由
-│   │   ├── login/          # 登录页面
-│   │   └── dashboard/      # 仪表盘及子页面
-│   ├── components/ui/      # Shadcn UI 组件库
-│   ├── hooks/              # 自定义 Hooks
-│   ├── lib/                # 工具库
-│   └── storage/            # 数据存储
-│       └── database/       # 数据库客户端
-└── next.config.ts          # Next.js 配置
-```
-
-### 快速开始
-
-#### 环境要求
-
-- Node.js 18+
-- pnpm 8+
-- Supabase 账号
-- S3 兼容对象存储服务
-
-#### 安装步骤
-
-1. **克隆仓库**
+### 启动开发服务器
 
 ```bash
-git clone https://github.com/ody-cai/oa-system.git
-cd oa-system
+coze dev
 ```
 
-2. **安装依赖**
+启动后，在浏览器中打开 [http://localhost:5000](http://localhost:5000) 查看应用。
+
+开发服务器支持热更新，修改代码后页面会自动刷新。
+
+### 构建生产版本
 
 ```bash
+coze build
+```
+
+### 启动生产服务器
+
+```bash
+coze start
+```
+
+## 项目结构
+
+```
+src/
+├── app/                      # Next.js App Router 目录
+│   ├── layout.tsx           # 根布局组件
+│   ├── page.tsx             # 首页
+│   ├── globals.css          # 全局样式（包含 shadcn 主题变量）
+│   └── [route]/             # 其他路由页面
+├── components/              # React 组件目录
+│   └── ui/                  # shadcn/ui 基础组件（优先使用）
+│       ├── button.tsx
+│       ├── card.tsx
+│       └── ...
+├── lib/                     # 工具函数库
+│   └── utils.ts            # cn() 等工具函数
+└── hooks/                   # 自定义 React Hooks（可选）
+
+server/
+├── index.ts                 # 自定义服务器入口
+├── tsconfig.json           # Server TypeScript 配置
+└── dist/                    # 编译输出目录（自动生成）
+```
+
+## 核心开发规范
+
+### 1. 组件开发
+
+**优先使用 shadcn/ui 基础组件**
+
+本项目已预装完整的 shadcn/ui 组件库，位于 `src/components/ui/` 目录。开发时应优先使用这些组件作为基础：
+
+```tsx
+// ✅ 推荐：使用 shadcn 基础组件
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+
+export default function MyComponent() {
+  return (
+    <Card>
+      <CardHeader>标题</CardHeader>
+      <CardContent>
+        <Input placeholder="输入内容" />
+        <Button>提交</Button>
+      </CardContent>
+    </Card>
+  );
+}
+```
+
+**可用的 shadcn 组件清单**
+
+- 表单：`button`, `input`, `textarea`, `select`, `checkbox`, `radio-group`, `switch`, `slider`
+- 布局：`card`, `separator`, `tabs`, `accordion`, `collapsible`, `scroll-area`
+- 反馈：`alert`, `alert-dialog`, `dialog`, `toast`, `sonner`, `progress`
+- 导航：`dropdown-menu`, `menubar`, `navigation-menu`, `context-menu`
+- 数据展示：`table`, `avatar`, `badge`, `hover-card`, `tooltip`, `popover`
+- 其他：`calendar`, `command`, `carousel`, `resizable`, `sidebar`
+
+详见 `src/components/ui/` 目录下的具体组件实现。
+
+### 2. 路由开发
+
+Next.js 使用文件系统路由，在 `src/app/` 目录下创建文件夹即可添加路由：
+
+```bash
+# 创建新路由 /about
+src/app/about/page.tsx
+
+# 创建动态路由 /posts/[id]
+src/app/posts/[id]/page.tsx
+
+# 创建路由组（不影响 URL）
+src/app/(marketing)/about/page.tsx
+
+# 创建 API 路由
+src/app/api/users/route.ts
+```
+
+**页面组件示例**
+
+```tsx
+// src/app/about/page.tsx
+import { Button } from '@/components/ui/button';
+
+export const metadata = {
+  title: '关于我们',
+  description: '关于页面描述',
+};
+
+export default function AboutPage() {
+  return (
+    <div>
+      <h1>关于我们</h1>
+      <Button>了解更多</Button>
+    </div>
+  );
+}
+```
+
+**动态路由示例**
+
+```tsx
+// src/app/posts/[id]/page.tsx
+export default async function PostPage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+
+  return <div>文章 ID: {id}</div>;
+}
+```
+
+**API 路由示例**
+
+```tsx
+// src/app/api/users/route.ts
+import { NextResponse } from 'next/server';
+
+export async function GET() {
+  return NextResponse.json({ users: [] });
+}
+
+export async function POST(request: Request) {
+  const body = await request.json();
+  return NextResponse.json({ success: true });
+}
+```
+
+### 3. 依赖管理
+
+**必须使用 pnpm 管理依赖**
+
+```bash
+# ✅ 安装依赖
 pnpm install
+
+# ✅ 添加新依赖
+pnpm add package-name
+
+# ✅ 添加开发依赖
+pnpm add -D package-name
+
+# ❌ 禁止使用 npm 或 yarn
+# npm install  # 错误！
+# yarn add     # 错误！
 ```
 
-3. **配置环境变量**
+项目已配置 `preinstall` 脚本，使用其他包管理器会报错。
 
-```bash
-cp .env.example .env.local
+### 4. 样式开发
+
+**使用 Tailwind CSS v4**
+
+本项目使用 Tailwind CSS v4 进行样式开发，并已配置 shadcn 主题变量。
+
+```tsx
+// 使用 Tailwind 类名
+<div className="flex items-center gap-4 p-4 rounded-lg bg-background">
+  <Button className="bg-primary text-primary-foreground">
+    主要按钮
+  </Button>
+</div>
+
+// 使用 cn() 工具函数合并类名
+import { cn } from '@/lib/utils';
+
+<div className={cn(
+  "base-class",
+  condition && "conditional-class",
+  className
+)}>
+  内容
+</div>
 ```
 
-编辑 `.env.local` 文件，填写以下配置：
+**主题变量**
 
-| 变量名 | 说明 |
-|--------|------|
-| `COZE_SUPABASE_URL` | Supabase 项目 URL |
-| `COZE_SUPABASE_ANON_KEY` | Supabase 匿名密钥 |
-| `COZE_BUCKET_ENDPOINT_URL` | S3 存储端点 URL |
-| `COZE_BUCKET_NAME` | 存储桶名称 |
+主题变量定义在 `src/app/globals.css` 中，支持亮色/暗色模式：
 
-4. **初始化数据库**
+- `--background`, `--foreground`
+- `--primary`, `--primary-foreground`
+- `--secondary`, `--secondary-foreground`
+- `--muted`, `--muted-foreground`
+- `--accent`, `--accent-foreground`
+- `--destructive`, `--destructive-foreground`
+- `--border`, `--input`, `--ring`
 
-在 Supabase 控制台执行以下 SQL 创建数据表：
+### 5. 表单开发
 
-```sql
--- 用户表
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email VARCHAR(255) NOT NULL UNIQUE,
-  name VARCHAR(128) NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL DEFAULT 'employee',
-  is_active BOOLEAN DEFAULT TRUE,
-  storage_quota INTEGER DEFAULT 10737418240,
-  last_active_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ
-);
+推荐使用 `react-hook-form` + `zod` 进行表单开发：
 
--- 文件表
-CREATE TABLE files (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  file_key VARCHAR(500) NOT NULL,
-  file_name VARCHAR(255) NOT NULL,
-  file_size INTEGER NOT NULL,
-  file_type VARCHAR(100),
-  uploader_id UUID NOT NULL REFERENCES users(id),
-  folder_path VARCHAR(500) DEFAULT '/',
-  repository_id UUID REFERENCES repositories(id) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ
-);
+```tsx
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import * as z from 'zod';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 
--- 公告表
-CREATE TABLE announcements (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title VARCHAR(255) NOT NULL,
-  content TEXT NOT NULL,
-  author_id UUID NOT NULL REFERENCES users(id),
-  is_pinned BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ
-);
+const formSchema = z.object({
+  username: z.string().min(2, '用户名至少 2 个字符'),
+  email: z.string().email('请输入有效的邮箱'),
+});
 
--- 消息表
-CREATE TABLE messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  sender_id UUID NOT NULL REFERENCES users(id),
-  receiver_id UUID NOT NULL REFERENCES users(id),
-  content TEXT NOT NULL,
-  is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
+export default function MyForm() {
+  const form = useForm({
+    resolver: zodResolver(formSchema),
+    defaultValues: { username: '', email: '' },
+  });
 
--- 仓库表
-CREATE TABLE repositories (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  type VARCHAR(20) NOT NULL CHECK (type IN ('public', 'private', 'group')),
-  owner_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW()
-);
+  const onSubmit = (data: z.infer<typeof formSchema>) => {
+    console.log(data);
+  };
 
--- 仓库成员表（群组仓库）
-CREATE TABLE repository_members (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  repository_id UUID NOT NULL REFERENCES repositories(id) ON DELETE CASCADE,
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  role VARCHAR(20) NOT NULL DEFAULT 'member' CHECK (role IN ('admin', 'member')),
-  invited_by UUID REFERENCES users(id),
-  joined_at TIMESTAMPTZ DEFAULT NOW(),
-  UNIQUE(repository_id, user_id)
-);
-
--- 仓库邀请表
-CREATE TABLE repository_invitations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  repository_id UUID NOT NULL REFERENCES repositories(id) ON DELETE CASCADE,
-  inviter_id UUID NOT NULL REFERENCES users(id),
-  invitee_email VARCHAR(255) NOT NULL,
-  status VARCHAR(20) NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'rejected', 'expired')),
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  expires_at TIMESTAMPTZ DEFAULT (NOW() + INTERVAL '7 days')
-);
-
--- 为 files 表添加仓库字段
-ALTER TABLE files ADD COLUMN repository_id UUID REFERENCES repositories(id) ON DELETE SET NULL;
-
--- 创建索引
-CREATE INDEX users_email_idx ON users(email);
-CREATE INDEX files_uploader_id_idx ON files(uploader_id);
-CREATE INDEX messages_sender_id_idx ON messages(sender_id);
-CREATE INDEX messages_receiver_id_idx ON messages(receiver_id);
-CREATE INDEX idx_repositories_owner ON repositories(owner_id);
-CREATE INDEX idx_repositories_type ON repositories(type);
-CREATE INDEX idx_repository_members_user ON repository_members(user_id);
-CREATE INDEX idx_files_repository ON files(repository_id);
+  return (
+    <form onSubmit={form.handleSubmit(onSubmit)}>
+      <Input {...form.register('username')} />
+      <Input {...form.register('email')} />
+      <Button type="submit">提交</Button>
+    </form>
+  );
+}
 ```
 
-5. **创建初始管理员账号**
+### 6. 数据获取
 
-```sql
--- 注意：以下密码哈希对应明文密码 'admin123'
--- 建议在生产环境生成新的加密密码
-INSERT INTO users (email, name, password_hash, role)
-VALUES ('admin@example.com', '管理员', '$2b$10$/QDjvCkJycI1lLdPgctrSuQSuPR0PCucSFyZkOsYsaBkmcmkRlrUW', 'admin');
+**服务端组件（推荐）**
+
+```tsx
+// src/app/posts/page.tsx
+async function getPosts() {
+  const res = await fetch('https://api.example.com/posts', {
+    cache: 'no-store', // 或 'force-cache'
+  });
+  return res.json();
+}
+
+export default async function PostsPage() {
+  const posts = await getPosts();
+
+  return (
+    <div>
+      {posts.map(post => (
+        <div key={post.id}>{post.title}</div>
+      ))}
+    </div>
+  );
+}
 ```
 
-6. **启动开发服务器**
+**客户端组件**
 
-```bash
-pnpm dev
+```tsx
+'use client';
+
+import { useEffect, useState } from 'react';
+
+export default function ClientComponent() {
+  const [data, setData] = useState(null);
+
+  useEffect(() => {
+    fetch('/api/data')
+      .then(res => res.json())
+      .then(setData);
+  }, []);
+
+  return <div>{JSON.stringify(data)}</div>;
+}
 ```
 
-访问 http://localhost:5000 即可使用。
+## 常见开发场景
 
-### API 文档
+### 添加新页面
 
-#### 认证接口
+1. 在 `src/app/` 下创建文件夹和 `page.tsx`
+2. 使用 shadcn 组件构建 UI
+3. 根据需要添加 `layout.tsx` 和 `loading.tsx`
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/auth/login` | 用户登录 |
+### 创建业务组件
 
-#### 文件接口
+1. 在 `src/components/` 下创建组件文件（非 UI 组件）
+2. 优先组合使用 `src/components/ui/` 中的基础组件
+3. 使用 TypeScript 定义 Props 类型
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/files` | 获取文件列表 |
-| POST | `/api/files/upload` | 上传文件 |
-| GET | `/api/files/download` | 获取下载链接 |
-| DELETE | `/api/files/{id}` | 删除文件 |
-| GET | `/api/files/stats` | 文件统计 |
+### 添加全局状态
 
-#### 仓库接口
+推荐使用 React Context 或 Zustand：
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/repositories` | 获取仓库列表 |
-| POST | `/api/repositories` | 创建仓库 |
-| GET | `/api/repositories/{id}` | 获取仓库详情 |
-| PATCH | `/api/repositories/{id}` | 更新仓库 |
-| DELETE | `/api/repositories/{id}` | 删除仓库 |
-| GET | `/api/repositories/{id}/members` | 获取成员列表 |
-| POST | `/api/repositories/{id}/members` | 邀请成员 |
-| PATCH | `/api/repositories/{id}/members` | 更新成员角色 |
-| DELETE | `/api/repositories/{id}/members` | 移除成员 |
+```tsx
+// src/lib/store.ts
+import { create } from 'zustand';
 
-#### 公告接口
+interface Store {
+  count: number;
+  increment: () => void;
+}
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/announcements` | 获取公告列表 |
-| POST | `/api/announcements` | 发布公告 |
-
-#### 用户接口（管理员）
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/users` | 获取用户列表 |
-| POST | `/api/users` | 创建用户 |
-| PATCH | `/api/users/{id}` | 更新用户 |
-| DELETE | `/api/users/{id}` | 删除用户 |
-
-#### 消息接口
-
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | `/api/messages` | 获取消息列表 |
-| POST | `/api/messages` | 发送消息 |
-| POST | `/api/messages/read` | 标记已读 |
-| GET | `/api/messages/unread` | 未读消息数 |
-
-### 部署说明
-
-#### 构建生产版本
-
-```bash
-pnpm build
+export const useStore = create<Store>((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+}));
 ```
 
-#### 启动生产服务
-
-```bash
-pnpm start
-```
-
-#### Docker 部署（可选）
-
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
-COPY . .
-RUN pnpm build
-EXPOSE 5000
-CMD ["pnpm", "start"]
-```
-
-### 开发规范
-
-- 使用 TypeScript strict 模式
-- 遵循 ESLint 规则
-- 数据库字段使用 snake_case
-- 前端组件使用 shadcn/ui
-
-### 安全注意事项
-
-1. **密码存储**：已使用 bcrypt 加密存储（salt rounds = 10）
-2. **环境变量**：请勿将 `.env` 文件提交到版本控制
-3. **HTTPS**：生产环境强制使用 HTTPS
-4. **RLS 策略**：建议配置 Supabase RLS 策略增强数据安全
-
----
-
-<a name="english"></a>
-
-## English
-
-A modern enterprise office automation system with integrated cloud storage, file management, announcement publishing, user management, and internal instant messaging.
-
-### Features
-
-- **User Authentication** - Secure login system with role-based access control (Admin/Employee)
-- **File Management** - Upload, download, preview, and delete files with S3-compatible object storage
-- **Storage Quota** - Independent storage quota management for each user
-- **Announcement Management** - Publish and pin company announcements
-- **Internal Messaging** - Instant messaging between users with read receipts
-- **Online Status** - Real-time user online status display
-- **User Management** - Admins can manage user accounts and adjust storage quotas
-
-### Tech Stack
-
-| Technology | Version | Purpose |
-|------------|---------|---------|
-| Next.js | 16 | Full-stack Framework (App Router) |
-| React | 19 | Frontend UI Library |
-| TypeScript | 5 | Type Safety |
-| Tailwind CSS | 4 | Styling Framework |
-| shadcn/ui | - | UI Component Library |
-| Supabase | - | PostgreSQL Database |
-| S3 Storage | - | Object Storage |
-
-### Project Structure
-
-```
-├── public/                 # Static assets
-├── scripts/                # Build and start scripts
-├── src/
-│   ├── app/                # Pages and layouts
-│   │   ├── api/            # Backend API routes
-│   │   ├── login/          # Login page
-│   │   └── dashboard/      # Dashboard and sub-pages
-│   ├── components/ui/      # Shadcn UI components
-│   ├── hooks/              # Custom Hooks
-│   ├── lib/                # Utilities
-│   └── storage/            # Data storage
-│       └── database/       # Database client
-└── next.config.ts          # Next.js configuration
-```
-
-### Quick Start
-
-#### Requirements
-
-- Node.js 18+
-- pnpm 8+
-- Supabase account
-- S3-compatible object storage service
-
-#### Installation
-
-1. **Clone the repository**
-
-```bash
-git clone https://github.com/ody-cai/oa-system.git
-cd oa-system
-```
-
-2. **Install dependencies**
-
-```bash
-pnpm install
-```
-
-3. **Configure environment variables**
-
-```bash
-cp .env.example .env.local
-```
-
-Edit `.env.local` with your configuration:
-
-| Variable | Description |
-|----------|-------------|
-| `COZE_SUPABASE_URL` | Supabase project URL |
-| `COZE_SUPABASE_ANON_KEY` | Supabase anonymous key |
-| `COZE_BUCKET_ENDPOINT_URL` | S3 storage endpoint URL |
-| `COZE_BUCKET_NAME` | Storage bucket name |
-
-4. **Initialize Database**
-
-Execute the following SQL in Supabase console to create tables:
-
-```sql
--- Users table
-CREATE TABLE users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email VARCHAR(255) NOT NULL UNIQUE,
-  name VARCHAR(128) NOT NULL,
-  password_hash VARCHAR(255) NOT NULL,
-  role VARCHAR(20) NOT NULL DEFAULT 'employee',
-  is_active BOOLEAN DEFAULT TRUE,
-  storage_quota INTEGER DEFAULT 10737418240,
-  last_active_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ
-);
-
--- Files table
-CREATE TABLE files (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  file_key VARCHAR(500) NOT NULL,
-  file_name VARCHAR(255) NOT NULL,
-  file_size INTEGER NOT NULL,
-  file_type VARCHAR(100),
-  uploader_id UUID NOT NULL REFERENCES users(id),
-  folder_path VARCHAR(500) DEFAULT '/',
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ
-);
-
--- Announcements table
-CREATE TABLE announcements (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title VARCHAR(255) NOT NULL,
-  content TEXT NOT NULL,
-  author_id UUID NOT NULL REFERENCES users(id),
-  is_pinned BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ
-);
-
--- Messages table
-CREATE TABLE messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  sender_id UUID NOT NULL REFERENCES users(id),
-  receiver_id UUID NOT NULL REFERENCES users(id),
-  content TEXT NOT NULL,
-  is_read BOOLEAN DEFAULT FALSE,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- Create indexes
-CREATE INDEX users_email_idx ON users(email);
-CREATE INDEX files_uploader_id_idx ON files(uploader_id);
-CREATE INDEX messages_sender_id_idx ON messages(sender_id);
-CREATE INDEX messages_receiver_id_idx ON messages(receiver_id);
-```
-
-5. **Create initial admin account**
-
-```sql
--- Note: The password hash below corresponds to plain text 'admin123'
--- Generate a new hashed password for production
-INSERT INTO users (email, name, password_hash, role)
-VALUES ('admin@example.com', 'Admin', '$2b$10$/QDjvCkJycI1lLdPgctrSuQSuPR0PCucSFyZkOsYsaBkmcmkRlrUW', 'admin');
-```
-
-6. **Start development server**
-
-```bash
-pnpm dev
-```
-
-Visit http://localhost:5000 to use the application.
-
-### API Documentation
-
-#### Authentication
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/auth/login` | User login |
-
-#### Files
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/files` | Get file list |
-| POST | `/api/files/upload` | Upload file |
-| GET | `/api/files/download` | Get download link |
-| DELETE | `/api/files/{id}` | Delete file |
-| GET | `/api/files/stats` | File statistics |
-
-#### Announcements
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/announcements` | Get announcement list |
-| POST | `/api/announcements` | Publish announcement |
-
-#### Users (Admin)
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/users` | Get user list |
-| POST | `/api/users` | Create user |
-| PATCH | `/api/users/{id}` | Update user |
-| DELETE | `/api/users/{id}` | Delete user |
-
-#### Messages
-
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/messages` | Get message list |
-| POST | `/api/messages` | Send message |
-| POST | `/api/messages/read` | Mark as read |
-| GET | `/api/messages/unread` | Unread message count |
-
-### Deployment
-
-#### Build for production
-
-```bash
-pnpm build
-```
-
-#### Start production server
-
-```bash
-pnpm start
-```
-
-#### Docker Deployment (Optional)
-
-```dockerfile
-FROM node:18-alpine
-WORKDIR /app
-COPY package.json pnpm-lock.yaml ./
-RUN npm install -g pnpm && pnpm install --frozen-lockfile
-COPY . .
-RUN pnpm build
-EXPOSE 5000
-CMD ["pnpm", "start"]
-```
-
-### Development Guidelines
-
-- Use TypeScript strict mode
-- Follow ESLint rules
-- Use snake_case for database fields
-- Use shadcn/ui for frontend components
-
-### Security Notes
-
-1. **Password Storage**: Encrypted with bcrypt (salt rounds = 10)
-2. **Environment Variables**: Never commit `.env` files to version control
-3. **HTTPS**: Enforce HTTPS in production
-4. **RLS Policies**: Configure Supabase RLS policies for enhanced data security
-
----
-
-## License | 许可证
-
-MIT License
-
-## Contributing | 贡献指南
-
-Issues and Pull Requests are welcome!
-
-1. Fork this repository
-2. Create a feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Create a Pull Request
-
----
-
-**Repository | 仓库地址**: https://github.com/ody-cai/oa-system
+### 集成数据库
+
+推荐使用 Prisma 或 Drizzle ORM，在 `src/lib/db.ts` 中配置。
+
+## 技术栈
+
+- **框架**: Next.js 16.1.1 (App Router)
+- **UI 组件**: shadcn/ui (基于 Radix UI)
+- **样式**: Tailwind CSS v4
+- **表单**: React Hook Form + Zod
+- **图标**: Lucide React
+- **字体**: Geist Sans & Geist Mono
+- **包管理器**: pnpm 9+
+- **TypeScript**: 5.x
+
+## 参考文档
+
+- [Next.js 官方文档](https://nextjs.org/docs)
+- [shadcn/ui 组件文档](https://ui.shadcn.com)
+- [Tailwind CSS 文档](https://tailwindcss.com/docs)
+- [React Hook Form](https://react-hook-form.com)
+
+## 重要提示
+
+1. **必须使用 pnpm** 作为包管理器
+2. **优先使用 shadcn/ui 组件** 而不是从零开发基础组件
+3. **遵循 Next.js App Router 规范**，正确区分服务端/客户端组件
+4. **使用 TypeScript** 进行类型安全开发
+5. **使用 `@/` 路径别名** 导入模块（已配置）

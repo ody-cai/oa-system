@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { useSearchParams, useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -23,11 +22,6 @@ import {
   MoreVertical,
   FolderPlus,
   Eye,
-  ArrowLeft,
-  FolderOpen,
-  Lock,
-  Globe,
-  Users,
 } from 'lucide-react';
 
 interface FileItem {
@@ -38,26 +32,9 @@ interface FileItem {
   file_type: string;
   folder_path: string;
   created_at: string;
-  repository_id?: string;
-  repository?: {
-    id: string;
-    name: string;
-    type: string;
-  };
-}
-
-interface RepositoryInfo {
-  id: string;
-  name: string;
-  type: 'public' | 'private' | 'group';
-  owner_id: string;
 }
 
 export default function FilesPage() {
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const repositoryId = searchParams.get('repositoryId');
-
   const [files, setFiles] = useState<FileItem[]>([]);
   const [currentPath, setCurrentPath] = useState('/');
   const [loading, setLoading] = useState(true);
@@ -67,44 +44,11 @@ export default function FilesPage() {
   const [previewOpen, setPreviewOpen] = useState(false);
   const [previewFileId, setPreviewFileId] = useState<string | null>(null);
   const [previewFileName, setPreviewFileName] = useState<string>('');
-  const [repository, setRepository] = useState<RepositoryInfo | null>(null);
-  const [currentUser, setCurrentUser] = useState<{ id: string; name: string } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // 获取当前用户
-    const userData = localStorage.getItem('user');
-    if (userData) {
-      const user = JSON.parse(userData);
-      setCurrentUser(user);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (currentUser) {
-      fetchFiles();
-      if (repositoryId) {
-        fetchRepositoryInfo();
-      }
-    }
-  }, [currentPath, repositoryId, currentUser]);
-
-  // 获取仓库信息
-  const fetchRepositoryInfo = async () => {
-    if (!repositoryId || !currentUser) return;
-
-    try {
-      const response = await fetch(
-        `/api/repositories/${repositoryId}?userId=${currentUser.id}`
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setRepository(data.repository);
-      }
-    } catch (error) {
-      console.error('获取仓库信息失败:', error);
-    }
-  };
+    fetchFiles();
+  }, [currentPath]);
 
   // 预览文件
   const handlePreview = (file: FileItem) => {
@@ -116,12 +60,7 @@ export default function FilesPage() {
   const fetchFiles = async () => {
     try {
       setLoading(true);
-      let url = `/api/files?path=${encodeURIComponent(currentPath)}`;
-      if (repositoryId && currentUser) {
-        url += `&repositoryId=${repositoryId}&userId=${currentUser.id}`;
-      }
-
-      const response = await fetch(url);
+      const response = await fetch(`/api/files?path=${encodeURIComponent(currentPath)}`);
       if (response.ok) {
         const data = await response.json();
         setFiles(data.files || []);
@@ -135,17 +74,18 @@ export default function FilesPage() {
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const uploadedFiles = e.target.files;
-    if (!uploadedFiles || uploadedFiles.length === 0 || !currentUser) return;
+    if (!uploadedFiles || uploadedFiles.length === 0) return;
+
+    // 从 localStorage 获取用户信息
+    const userData = localStorage.getItem('user');
+    const user = userData ? JSON.parse(userData) : null;
 
     setUploading(true);
     try {
       const formData = new FormData();
       formData.append('file', uploadedFiles[0]);
       formData.append('folderPath', currentPath);
-      formData.append('userId', currentUser.id);
-      if (repositoryId) {
-        formData.append('repositoryId', repositoryId);
-      }
+      formData.append('userId', user?.id || 'system');
 
       const response = await fetch('/api/files/upload', {
         method: 'POST',
@@ -153,14 +93,13 @@ export default function FilesPage() {
       });
 
       if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || '上传失败');
+        throw new Error('上传失败');
       }
 
       await fetchFiles();
     } catch (error) {
       console.error('上传文件失败:', error);
-      alert(error instanceof Error ? error.message : '上传失败，请重试');
+      alert('上传失败，请重试');
     } finally {
       setUploading(false);
       if (fileInputRef.current) {
@@ -226,19 +165,6 @@ export default function FilesPage() {
     return <FileText className="h-5 w-5 text-gray-500" />;
   };
 
-  const getRepositoryIcon = (type: string) => {
-    switch (type) {
-      case 'public':
-        return <Globe className="w-4 h-4 text-green-500" />;
-      case 'private':
-        return <Lock className="w-4 h-4 text-orange-500" />;
-      case 'group':
-        return <Users className="w-4 h-4 text-blue-500" />;
-      default:
-        return <Folder className="w-4 h-4 text-gray-500" />;
-    }
-  };
-
   const filteredFiles = files.filter((file) =>
     file.file_name.toLowerCase().includes(searchQuery.toLowerCase())
   );
@@ -248,50 +174,12 @@ export default function FilesPage() {
       {/* 工具栏 */}
       <div className="flex flex-col gap-4 mb-6">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            {repositoryId && (
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => router.push('/dashboard/repositories')}
-              >
-                <ArrowLeft className="w-5 h-5" />
-              </Button>
-            )}
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-semibold text-[#2D3748]">
-                  {repository ? repository.name : '文件管理'}
-                </h1>
-                {repository && (
-                  <div className="flex items-center gap-1 px-2 py-0.5 bg-muted rounded text-xs">
-                    {getRepositoryIcon(repository.type)}
-                    <span>
-                      {repository.type === 'public'
-                        ? '公共仓库'
-                        : repository.type === 'private'
-                        ? '私人仓库'
-                        : '群组仓库'}
-                    </span>
-                  </div>
-                )}
-              </div>
-              <p className="text-xs sm:text-sm text-gray-600 mt-1">
-                路径: {currentPath}
-              </p>
-            </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-semibold text-[#2D3748]">文件管理</h1>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+              路径: {currentPath}
+            </p>
           </div>
-          
-          {!repositoryId && (
-            <Button
-              onClick={() => router.push('/dashboard/repositories')}
-              variant="outline"
-              className="w-full sm:w-auto"
-            >
-              <FolderOpen className="h-4 w-4 mr-2" />
-              仓库列表
-            </Button>
-          )}
           
           <Button
             onClick={() => fileInputRef.current?.click()}

@@ -17,8 +17,7 @@ import {
   Users,
   MessageCircle,
   Sun,
-  Moon,
-  FolderOpen
+  Moon
 } from 'lucide-react';
 
 interface User {
@@ -136,7 +135,6 @@ export default function DashboardLayout({
 
   const menuItems: MenuItem[] = [
     { href: '/dashboard', label: '仪表盘', icon: Home, adminOnly: false },
-    { href: '/dashboard/repositories', label: '云存储仓库', icon: FolderOpen, adminOnly: false },
     { href: '/dashboard/files', label: '文件管理', icon: FileText, adminOnly: false },
     { href: '/dashboard/messages', label: '消息中心', icon: MessageCircle, adminOnly: false, badge: unreadCount },
     { href: '/dashboard/announcements', label: '公告中心', icon: MessageSquare, adminOnly: false },
