@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { S3Storage } from 'coze-coding-dev-sdk';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
 // 初始化 S3 存储
 const storage = new S3Storage();
 
-export async function GET(request: NextRequest) {
+async function getPreviewUrl(request: AuthenticatedRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const fileId = searchParams.get('fileId');
@@ -53,3 +54,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withAuth(getPreviewUrl);

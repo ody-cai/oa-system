@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
-export async function GET(request: NextRequest) {
+async function getAnnouncements(request: AuthenticatedRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -32,10 +33,10 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function createAnnouncement(request: AuthenticatedRequest) {
   try {
     const body = await request.json();
-    const { title, content, isPinned = false, authorId = 'system' } = body;
+    const { title, content, isPinned = false } = body;
 
     if (!title || !content) {
       return NextResponse.json(
@@ -46,12 +47,13 @@ export async function POST(request: NextRequest) {
 
     const client = getSupabaseClient();
     
+    // 使用当前登录用户作为作者
     const { data: announcement, error } = await client
       .from('announcements')
       .insert({
         title,
         content,
-        author_id: authorId,
+        author_id: request.user.userId,
         is_pinned: isPinned,
       })
       .select()
@@ -73,3 +75,6 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const GET = withAuth(getAnnouncements);
+export const POST = withAuth(createAnnouncement);

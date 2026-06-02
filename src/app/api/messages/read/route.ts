@@ -1,14 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
 // 标记消息已读
-export async function POST(request: NextRequest) {
+async function markAsRead(request: AuthenticatedRequest) {
   const supabase = getSupabaseClient();
   try {
     const body = await request.json();
-    const { userId, otherUserId } = body;
+    const { otherUserId } = body;
+    const userId = request.user.userId;
 
-    if (!userId || !otherUserId) {
+    if (!otherUserId) {
       return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
     }
 
@@ -28,3 +30,5 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '标记已读失败' }, { status: 500 });
   }
 }
+
+export const POST = withAuth(markAsRead);

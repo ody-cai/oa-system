@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { S3Storage } from 'coze-coding-dev-sdk';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+async function deleteFile(
+  request: AuthenticatedRequest,
+  context: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const { id: fileId } = await params;
+    const params = await context.params;
+    const fileId = params.id;
 
     if (!fileId) {
       return NextResponse.json(
@@ -29,6 +31,14 @@ export async function DELETE(
       return NextResponse.json(
         { error: '文件不存在' },
         { status: 404 }
+      );
+    }
+
+    // 权限检查：只有上传者或管理员可以删除文件
+    if (file.uploader_id !== request.user.userId && request.user.role !== 'admin') {
+      return NextResponse.json(
+        { error: '您没有权限删除此文件' },
+        { status: 403 }
       );
     }
 
@@ -65,3 +75,5 @@ export async function DELETE(
     );
   }
 }
+
+export const DELETE = withAuth(deleteFile);

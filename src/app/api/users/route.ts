@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { adminOnly, AuthenticatedRequest } from '@/lib/middleware';
+import { hashPassword } from '@/lib/auth';
 
-export async function GET(request: NextRequest) {
+async function getUsers(request: AuthenticatedRequest) {
   try {
     const client = getSupabaseClient();
     
@@ -27,7 +29,7 @@ export async function GET(request: NextRequest) {
   }
 }
 
-export async function POST(request: NextRequest) {
+async function createUser(request: AuthenticatedRequest) {
   try {
     const body = await request.json();
     const { email, name, password, role = 'employee' } = body;
@@ -57,13 +59,16 @@ export async function POST(request: NextRequest) {
     // 管理员无上限配额（-1表示无限制），普通员工默认10GB
     const storageQuota = role === 'admin' ? -1 : 10737418240;
 
+    // 使用bcrypt哈希密码
+    const hashedPassword = await hashPassword(password);
+
     // 创建新用户
     const { data: user, error } = await client
       .from('users')
       .insert({
         email,
         name,
-        password_hash: password, // 生产环境应该加密
+        password_hash: hashedPassword,
         role,
         is_active: true,
         storage_quota: storageQuota,
@@ -87,3 +92,7 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+// 仅管理员可访问
+export const GET = adminOnly(getUsers);
+export const POST = adminOnly(createUser);

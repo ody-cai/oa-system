@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
-export async function GET(request: NextRequest) {
+async function getFiles(request: AuthenticatedRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const path = searchParams.get('path') || '/';
@@ -30,3 +31,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withAuth(getFiles);

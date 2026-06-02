@@ -1,9 +1,10 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
 // 获取用户在线状态
 // 规则：5分钟内有活跃 = 在线，否则离线
-export async function GET(request: Request) {
+async function getOnlineStatus(request: AuthenticatedRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const userIds = searchParams.get('userIds');
@@ -50,3 +51,5 @@ export async function GET(request: Request) {
     );
   }
 }
+
+export const GET = withAuth(getOnlineStatus);

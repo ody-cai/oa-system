@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
 import { S3Storage } from 'coze-coding-dev-sdk';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
-export async function POST(request: NextRequest) {
+async function uploadFile(request: AuthenticatedRequest) {
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File;
     const folderPath = formData.get('folderPath') as string || '/';
-    const userId = formData.get('userId') as string || 'system';
 
     if (!file) {
       return NextResponse.json(
@@ -17,6 +17,7 @@ export async function POST(request: NextRequest) {
     }
 
     const client = getSupabaseClient();
+    const userId = request.user.userId;
 
     // 查询用户配额
     const { data: user, error: userError } = await client
@@ -108,3 +109,5 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export const POST = withAuth(uploadFile);

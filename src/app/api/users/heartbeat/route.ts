@@ -1,18 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
 // 更新用户最后活跃时间
-export async function POST(request: Request) {
+async function heartbeat(request: AuthenticatedRequest) {
   try {
-    const body = await request.json();
-    const { userId } = body;
-
-    if (!userId) {
-      return NextResponse.json(
-        { error: '缺少用户ID' },
-        { status: 400 }
-      );
-    }
+    const userId = request.user.userId;
 
     const supabase = getSupabaseClient();
 
@@ -38,3 +31,5 @@ export async function POST(request: Request) {
     );
   }
 }
+
+export const POST = withAuth(heartbeat);

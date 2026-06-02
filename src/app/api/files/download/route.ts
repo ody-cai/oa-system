@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { S3Storage } from 'coze-coding-dev-sdk';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
-export async function GET(request: NextRequest) {
+async function getDownloadUrl(request: AuthenticatedRequest) {
   try {
     const searchParams = request.nextUrl.searchParams;
     const fileKey = searchParams.get('key');
@@ -39,3 +40,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withAuth(getDownloadUrl);

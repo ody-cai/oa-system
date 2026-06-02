@@ -2,7 +2,7 @@
 
 ## 项目概览
 
-OA办公自动化系统，集成云存储功能，支持文件管理、公告发布等核心办公功能。
+OA办公自动化系统，集成云存储功能，支持文件管理、公告发布、即时通讯等核心办公功能。
 
 ### 技术栈
 
@@ -13,6 +13,7 @@ OA办公自动化系统，集成云存储功能，支持文件管理、公告发
 - **Styling**: Tailwind CSS 4
 - **Database**: Supabase (PostgreSQL)
 - **Storage**: S3 兼容对象存储
+- **Auth**: JWT (jose) + bcrypt
 
 ## 目录结构
 
@@ -22,12 +23,19 @@ OA办公自动化系统，集成云存储功能，支持文件管理、公告发
 ├── src/
 │   ├── app/                # 页面路由与布局
 │   │   ├── api/            # 后端API路由
+│   │   │   ├── auth/       # 认证相关API
+│   │   │   ├── files/      # 文件管理API
+│   │   │   ├── users/      # 用户管理API
+│   │   │   ├── messages/   # 消息API
+│   │   │   └── announcements/ # 公告API
 │   │   ├── login/          # 登录页面
 │   │   └── dashboard/      # 仪表盘及子页面
 │   ├── components/ui/      # Shadcn UI 组件库
 │   ├── hooks/              # 自定义 Hooks
 │   ├── lib/                # 工具库
-│   │   └── utils.ts        # 通用工具函数 (cn)
+│   │   ├── utils.ts        # 通用工具函数 (cn)
+│   │   ├── auth.ts         # JWT认证工具
+│   │   └── middleware.ts   # API认证中间件
 │   └── storage/            # 数据存储
 │       └── database/       # 数据库客户端
 └── next.config.ts          # Next.js 配置
@@ -50,44 +58,62 @@ pnpm build
 pnpm start
 ```
 
+## 认证系统
+
+### JWT认证流程
+1. **登录**: `POST /api/auth/login` → 返回JWT Token
+2. **验证**: `GET /api/auth/verify` → 验证Token有效性，返回用户信息
+3. **请求保护**: 所有需要认证的API需在请求头携带 `Authorization: Bearer {token}`
+
+### 认证中间件
+- `withAuth(handler)`: 基础认证，所有登录用户可访问
+- `adminOnly(handler)`: 仅管理员可访问
+- `withOptionalAuth(handler)`: 可选认证，有token则验证
+
+### 密码安全
+- 新用户密码使用bcrypt哈希存储（salt rounds: 10）
+- 登录时支持bcrypt验证和明文兼容（便于迁移旧数据）
+
 ## 核心功能模块
 
 ### 1. 用户认证
 - 登录接口: `POST /api/auth/login`
-- 用户信息存储在 localStorage
-- 路由保护：dashboard 页面需要登录
+  - 请求体: `{ email, password }`
+  - 返回: `{ user, token, message }`
+- Token验证: `GET /api/auth/verify`
+  - Header: `Authorization: Bearer {token}`
+  - 返回: `{ user, valid }`
+- 前端需将token存储在localStorage，并在请求头携带
 
-### 2. 文件管理
-- 文件上传: `POST /api/files/upload` (集成云存储)
+### 2. 文件管理（需认证）
+- 文件上传: `POST /api/files/upload`
 - 文件下载: `GET /api/files/download?key={fileKey}`
-- 文件删除: `DELETE /api/files/{id}`
+- 文件删除: `DELETE /api/files/{id}` (上传者或管理员)
 - 文件列表: `GET /api/files?path={path}`
 - 文件统计: `GET /api/files/stats`
+- 文件预览: `GET /api/files/preview?fileId={fileId}`
 
-### 3. 公告管理
+### 3. 公告管理（需认证）
 - 公告列表: `GET /api/announcements?limit={limit}`
 - 发布公告: `POST /api/announcements`
 
-### 4. 用户管理（管理员专用）
+### 4. 用户管理（仅管理员）
 - 用户列表: `GET /api/users`
 - 添加用户: `POST /api/users`
 - 更新状态: `PATCH /api/users/{id}`
 - 删除用户: `DELETE /api/users/{id}`
 - 调整配额: `PATCH /api/users/{id}` (storage_quota字段)
 
-### 5. 站内即时通讯
+### 5. 站内即时通讯（需认证）
 - 发送消息: `POST /api/messages`
-- 获取会话列表: `GET /api/messages?userId={userId}`
-- 获取对话消息: `GET /api/messages?userId={userId}&otherUserId={otherUserId}`
+- 获取会话列表: `GET /api/messages`
+- 获取对话消息: `GET /api/messages?otherUserId={otherUserId}`
 - 标记已读: `POST /api/messages/read`
-- 未读消息数: `GET /api/messages/unread?userId={userId}`
-- 支持用户间、用户与管理员间的即时通讯
-- 已读回执功能（双勾表示已读）
+- 未读消息数: `GET /api/messages/unread`
 
-### 6. 仪表盘
-- 文件统计展示
-- 最新公告展示
-- 快捷操作入口
+### 6. 用户状态（需认证）
+- 心跳更新: `POST /api/users/heartbeat`
+- 在线状态: `GET /api/users/online-status?userIds={id1,id2}`
 
 ## 数据库设计
 
@@ -95,10 +121,11 @@ pnpm start
 - id: UUID (主键)
 - email: 邮箱 (唯一)
 - name: 姓名
-- password_hash: 密码哈希
+- password_hash: 密码哈希 (bcrypt)
 - role: 角色 (admin/employee)
 - is_active: 是否激活
 - storage_quota: 存储配额（字节，-1表示无限制，默认10GB）
+- last_online_at: 最后在线时间
 
 ### 存储配额说明
 - 普通员工：默认10GB存储空间
@@ -147,6 +174,27 @@ pnpm start
 - 禁止使用 Drizzle ORM 查询语法
 - 所有操作必须检查 error 并 throw
 
+### 认证规范
+- 所有需要认证的API必须使用 `withAuth` 或 `adminOnly` 包装
+- 前端请求需在 Header 中携带 `Authorization: Bearer {token}`
+- Token有效期为24小时
+
+## 环境变量
+
+```bash
+# JWT密钥（生产环境必须修改）
+JWT_SECRET=your-secret-key
+
+# Supabase配置
+COZE_SUPABASE_URL=your-supabase-url
+COZE_SUPABASE_ANON_KEY=your-anon-key
+COZE_SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+
+# 对象存储配置
+COZE_BUCKET_ENDPOINT_URL=your-endpoint
+COZE_BUCKET_NAME=your-bucket
+```
+
 ## 测试账号
 
 - 邮箱: admin@oa.com
@@ -157,5 +205,6 @@ pnpm start
 
 1. 文件上传功能已集成云存储，使用 S3Storage SDK
 2. 所有文件下载使用预签名 URL，支持跨域
-3. 用户密码当前为明文存储，生产环境需改用 bcrypt
-4. RLS 策略暂未配置，后续实现登录功能时需补充
+3. 用户密码已使用bcrypt哈希存储
+4. 所有API已添加认证保护，未登录用户无法访问
+5. 管理员专用API已添加角色检查

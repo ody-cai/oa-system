@@ -1,17 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
 // 获取会话列表或对话消息
-export async function GET(request: NextRequest) {
+async function getMessages(request: AuthenticatedRequest) {
   const supabase = getSupabaseClient();
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const userId = request.user.userId; // 从认证信息获取当前用户ID
     const otherUserId = searchParams.get('otherUserId');
-
-    if (!userId) {
-      return NextResponse.json({ error: '缺少用户ID' }, { status: 400 });
-    }
 
     // 如果指定了otherUserId，获取两人之间的对话消息
     if (otherUserId) {
@@ -121,13 +118,14 @@ export async function GET(request: NextRequest) {
 }
 
 // 发送消息
-export async function POST(request: NextRequest) {
+async function sendMessage(request: AuthenticatedRequest) {
   const supabase = getSupabaseClient();
   try {
     const body = await request.json();
-    const { senderId, receiverId, content } = body;
+    const { receiverId, content } = body;
+    const senderId = request.user.userId; // 从认证信息获取发送者ID
 
-    if (!senderId || !receiverId || !content) {
+    if (!receiverId || !content) {
       return NextResponse.json({ error: '缺少必要参数' }, { status: 400 });
     }
 
@@ -153,3 +151,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '发送消息失败' }, { status: 500 });
   }
 }
+
+export const GET = withAuth(getMessages);
+export const POST = withAuth(sendMessage);

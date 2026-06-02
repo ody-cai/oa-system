@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { adminOnly, AuthenticatedRequest } from '@/lib/middleware';
 
-export async function PATCH(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+async function updateUser(
+  request: AuthenticatedRequest,
+  context: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const { id: userId } = await params;
+    const params = await context.params;
+    const userId = params.id;
     const body = await request.json();
     const { is_active, storage_quota } = body;
 
@@ -52,12 +54,13 @@ export async function PATCH(
   }
 }
 
-export async function DELETE(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
+async function deleteUser(
+  request: AuthenticatedRequest,
+  context: { params: Promise<Record<string, string>> }
 ) {
   try {
-    const { id: userId } = await params;
+    const params = await context.params;
+    const userId = params.id;
 
     const client = getSupabaseClient();
     
@@ -81,3 +84,6 @@ export async function DELETE(
     );
   }
 }
+
+export const PATCH = adminOnly(updateUser);
+export const DELETE = adminOnly(deleteUser);

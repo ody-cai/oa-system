@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
-export async function GET(request: NextRequest) {
+async function getFileStats(request: AuthenticatedRequest) {
   try {
     const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
+    const requestUserId = searchParams.get('userId');
     
     const client = getSupabaseClient();
+    
+    // 确定查询的用户ID：普通用户只能查自己的，管理员可以查所有或指定的
+    let targetUserId = request.user.userId;
+    if (requestUserId && request.user.role === 'admin') {
+      targetUserId = requestUserId;
+    }
     
     // 构建查询
     let query = client
@@ -14,8 +21,8 @@ export async function GET(request: NextRequest) {
       .select('file_size');
     
     // 如果指定了用户ID，只查询该用户的文件
-    if (userId) {
-      query = query.eq('uploader_id', userId);
+    if (targetUserId) {
+      query = query.eq('uploader_id', targetUserId);
     }
 
     const { data: files, error } = await query;
@@ -39,3 +46,5 @@ export async function GET(request: NextRequest) {
     );
   }
 }
+
+export const GET = withAuth(getFileStats);

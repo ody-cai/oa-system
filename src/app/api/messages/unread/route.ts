@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
+import { withAuth, AuthenticatedRequest } from '@/lib/middleware';
 
 // 获取未读消息数量
-export async function GET(request: NextRequest) {
+async function getUnreadCount(request: AuthenticatedRequest) {
   const supabase = getSupabaseClient();
   try {
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-
-    if (!userId) {
-      return NextResponse.json({ error: '缺少用户ID' }, { status: 400 });
-    }
+    const userId = request.user.userId;
 
     const { count, error } = await supabase
       .from('messages')
@@ -28,3 +24,5 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: '获取未读消息数失败' }, { status: 500 });
   }
 }
+
+export const GET = withAuth(getUnreadCount);
