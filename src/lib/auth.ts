@@ -2,14 +2,21 @@ import { SignJWT, jwtVerify } from 'jose';
 import bcrypt from 'bcrypt';
 
 // JWT配置
-const JWT_SECRET = process.env.JWT_SECRET || 'oa-system-secret-key-change-in-production';
+const getJwtSecret = (): string => {
+  const secret = process.env.JWT_SECRET;
+  if (!secret) {
+    throw new Error('JWT_SECRET environment variable is required. Please set it in your deployment environment.');
+  }
+  return secret;
+};
+
 const JWT_EXPIRES_IN = '24h';
 const JWT_ISSUER = 'oa-system';
 const JWT_AUDIENCE = 'oa-system-users';
 
 // 从密钥字符串生成密钥
 function getSecretKey(): Uint8Array {
-  return new TextEncoder().encode(JWT_SECRET);
+  return new TextEncoder().encode(getJwtSecret());
 }
 
 // 用户信息接口
