@@ -1,6 +1,7 @@
 {
-  "name": "projects",
-  "version": "0.1.0",
+  "name": "oa-system",
+  "version": "1.0.0",
+  "description": "OA办公自动化系统 - 集成云存储、文件管理、公告发布、用户管理和站内即时通讯",
   "private": true,
   "scripts": {
     "build": "bash ./scripts/build.sh",
